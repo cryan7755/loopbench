@@ -68,12 +68,12 @@ function buildMidi(){
       });
       const S = p.synth || state.synth, bl = ((S.len || 0.9))*STEP;
       for(let r=0;r<ROWS;r++) if(p.notes[r][s]) add(T.bass, at, midiOf(r, S), bl);
-      [[p.lead, p.leadSynth], [p.lead2, p.lead2Synth]].forEach(([line, LS]) => { if(line && LS) line.forEach(([r,st]) => { if(st === s) add(T.lead, at, midiOf(r, LS), (LS.len || 0.9)*STEP); }); });
+      [[p.lead, p.leadSynth], [p.lead2, p.lead2Synth]].forEach(([line, LS]) => { if(line && LS) line.forEach(([r,st,d]) => { if(st === s) add(T.lead, at, midiOf(r, LS), (d || LS.len || 0.9)*STEP); }); });
       if(p.arp) p.arp.forEach(([r,st]) => { if(st === s) add(T.arp, at, 72 + p.arpT + r, STEP*0.5, 80); });
       if(p.counter) p.counter.forEach(([r,st]) => { if(st === s) add(T.counter, at, 72 + p.counterT + r, STEP*2, 85); });
       if(p.vocal) p.vocal.forEach(v => { if(v.s === s) add(T.vocal, at, v.m, v.len*STEP, v.chop ? 95 : 90); });
-      if(p.chords && p.chords.steps.includes(s)) [...(p.chords.ext || p.chords.ints), 12].forEach(r => add(p.chords.len > 2 ? T.pad : T.chords, at, 60 + p.chords.T + r, p.chords.len*STEP, 80));
-      if(p.wall && s === 0) [48 + p.wall.T, 60 + p.wall.T + p.wall.ints[1], 60 + p.wall.T + p.wall.ints[2], 72 + p.wall.T].forEach(m => add(T.pad, at, m, p.wall.len*STEP, 70));
+      if(p.chords && p.chords.steps.includes(s)) (p.chords.voiced || [...(p.chords.ext || p.chords.ints), 12].map(r => 60 + p.chords.T + r)).forEach(m => add(p.chords.len > 2 ? T.pad : T.chords, at, m, p.chords.len*STEP, 80));
+      if(p.wall && s === 0) (p.wall.voiced ? [48 + p.wall.T, ...p.wall.voiced] : [48 + p.wall.T, 60 + p.wall.T + p.wall.ints[1], 60 + p.wall.T + p.wall.ints[2], 72 + p.wall.T]).forEach(m => add(T.pad, at, m, p.wall.len*STEP, 70));
     }
   }
   const bytes = [];

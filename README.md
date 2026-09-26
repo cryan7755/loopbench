@@ -8,6 +8,7 @@ Everything runs in the browser. The built app is a single self-contained HTML fi
 
 - **15 genres:** trance, big room, progressive house, future bass, melodic dubstep, drum & bass, techno, tech house, deep house, psytrance, hardstyle, synthwave, UK garage, festival trap, eurodance
 - **Full song forms:** classic, cold open, extended mix, fake-out drop, radio edit
+- **Composed, not just randomised:** chord progressions are built from harmonic function (home, departure, tension) and voice-led so chords glide; hooks and vocal lines are written as sentences or question-and-answer periods, generated dozens of times and ranked by rules from music-cognition research (chord tones on strong beats, resolved leaps, a single well-placed peak, a firm cadence, a middle amount of predictability)
 - **Per-song variety:** sound design, chord language (7ths, add9, sus), melody style, build recipe, drum kit, delay timing and trance gates all vary per song
 - **Sound palettes:** hybrid, orchestral (no synths) or all synth; sampled piano, strings, choir, harp, violin, bass guitar and drums; recorded sung vocals
 - **Your own samples:** drop in kicks, claps, hats, lead/bass/pad notes or a vocal chop
@@ -27,7 +28,7 @@ npm run build    # writes dist/loopbench.html
 Open `dist/loopbench.html` in Chrome or Edge. While working on the code, `npm run watch` rebuilds on every save; refresh the browser to see changes.
 
 ```sh
-npm test         # generation, song codes, exports and offline audio rendering (~40 s)
+npm test         # generation, composition rules, song codes, exports and offline audio rendering (~45 s)
 ```
 
 ## How the code is organised
@@ -49,6 +50,8 @@ The app is plain JavaScript with no framework. `scripts/build.mjs` joins the fil
 | `src/10-step-playback.js` | Plays one step of a bar (every instrument and effect) |
 | `src/11-playback-engine.js` | Live scheduler, background pre-rendering, start and stop |
 | `src/12-ui.js`, `src/13-controls.js` | Interface and controls |
+| `src/14-harmony.js` | Functional chord progressions and voice-led chord voicings |
+| `src/15-composer.js` | Melody writing: phrase shapes, generate-and-rank, the melody critic |
 | `assets/samples/<instrument>/<midi-note>.mp3` | Instrument samples |
 | `assets/vocals/<bank>/<midi-note>.wav` | Vocal samples; loop points in `loops.json` |
 | `tests/` | Test suite (`node --test`) |

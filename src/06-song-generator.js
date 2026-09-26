@@ -117,16 +117,16 @@ function makeVocal(max = 4){
   const vowels = rh.map(([,len]) => len >= 6 ? pick(VOWEL_WORDS.filter(w => w.length > 1)) : pick(VOWEL_WORDS));
   return {rh, a: walk(Math.min(2, max)), b: walk(0), vowels};
 }
-function vocalBar(song, i, T, ints, octaveUp = 0, V = null){
-  V = V || song.vocal || (song.vocal = makeVocal());
-  const half = i % 2, contour = Math.floor(i/2) % 2 ? V.b : V.a;
-  const ladder = [0, ints[1], ints[2], 12, 12+ints[1]];
+function vocalBar(song, i, T, ints, octaveUp = 0, V = null, prog = null){
+  V = V || song.vocal;
+  const sc = SCALES[song.scale], bar = i % V.bars, root = prog ? rootAtBar(song, prog, i) : null, K = keyOff(song);
   const out = []; let prev = null;
-  V.rh.forEach(([start,len], k) => {
-    if(start < half*16 || start >= half*16 + 16) return;
-    const m = 60 + T + ladder[contour[k]] + octaveUp;
-    out.push({s: start - half*16, len, m, vw: V.vowels[k], from: prev});
-    prev = m;
+  V.notes.forEach((n, k) => {
+    if(n.bar !== bar) return;
+    let deg = n.deg;
+    if(root !== null && (n.s % 4 === 0 || n.dur >= 3) && !isChordTone(song, deg, root)) deg = nearestChordTone(song, deg, root);
+    const m = 60 + K + scaleNote(sc, deg) + octaveUp;
+    out.push({s: n.s, len: n.dur, m, vw: V.vowels[k], from: prev}); prev = m;
   });
   return out;
 }
@@ -177,13 +177,14 @@ function makeSong(style, seed, parts){
     const b = STYLES[style].bpm;
     const song = {style, seed, parts, bpm: b[0] + Math.floor(rnd()*(b[1]-b[0]+1)), key: Math.floor(rnd()*12),
       scale: pick(STYLES[style].scales || ['minor','minor','dorian','major']), title: pick(WORDS1) + ' ' + pick(WORDS2)};
-    R('chords'); Object.assign(song, {prog: pick(PROGS), bdProg: pick(PROGS), stab: pick([[2,6,10,14],[0,3,6,10,12],[3,11],[0,6,12],[2,5,10,13]]),
+    R('chords'); song.v = COMPOSER_VERSION; song.prog = makeProgression(song.scale);
+    Object.assign(song, {bdProg: makeProgression(song.scale, {start: [5, 3, 5, 0], avoid: song.prog}), stab: pick([[2,6,10,14],[0,3,6,10,12],[3,11],[0,6,12],[2,5,10,13]]),
       harmony: pick(['triad','triad','seventh','add9','mixed']), sus: chance(0.35), chordBars: pick([1,1,2])});
     if(STYLES[style].harmony && chance(0.75)) song.harmony = STYLES[style].harmony;
     R('hook');   song.melody = pick(MELODY_STYLES);
-    Object.assign(song, {dropHook: makeDropHook(song.melody), hooks: [makeHook(), makeHook()], arpShape: pick(ARP_SHAPES), counterShape: pick(COUNTER_SHAPES)});
+    Object.assign(song, {dropHook: composeHook(song), arpShape: pick(ARP_SHAPES), counterShape: pick(COUNTER_SHAPES)});
     R('bass');   Object.assign(song, {riffs: [makeRiff(), makeRiff(), makeRiff()], bassWave: pick(['sawtooth','square']), leadWave: pick(['square','sawtooth']), arpWave: 'pluck'});
-    R('vocal');  Object.assign(song, {vocal: makeVocal(), verseVocal: makeVocal(2)});
+    R('vocal');  Object.assign(song, {vocal: composeVocal(song, 'chorus'), verseVocal: composeVocal(song, 'verse')});
     R('sound');  song.dna = makeDNA(style);
     R('form');   song.form = pick(Object.keys(FORMS));
     return song;
@@ -191,11 +192,13 @@ function makeSong(style, seed, parts){
 }
 function songCode(song){
   const extra = PART_KEYS.some(k => song.parts && song.parts[k]) ? '.' + PART_KEYS.map(k => ((song.parts[k] || 0) % 36).toString(36)).join('') : '';
-  return `${song.style}-${song.seed}${extra}`;
+  return `${song.style}-${song.seed}${extra}-v${COMPOSER_VERSION}`;
 }
 function parseCode(code){
-  const m = String(code).trim().match(/^([a-z]+)-([A-Z0-9]{4,12})(?:\.([a-z0-9]{5,7}))?$/i);
+  const m = String(code).trim().match(/^([a-z]+)-([A-Z0-9]{4,12})(?:\.([a-z0-9]{5,7}))?(?:-v(\d+))?$/i);
   if(!m || !STYLES[m[1].toLowerCase()]) return null;
   const parts = {}; if(m[3]) PART_KEYS.forEach((k,i) => { if(m[3][i]) parts[k] = parseInt(m[3][i], 36); });
-  return makeSong(m[1].toLowerCase(), m[2].toUpperCase(), parts);
+  const song = makeSong(m[1].toLowerCase(), m[2].toUpperCase(), parts);
+  song.fromVersion = m[4] ? +m[4] : 1;
+  return song;
 }

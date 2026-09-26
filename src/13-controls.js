@@ -98,7 +98,8 @@ $('copyCode').onclick = async () => {
 $('loadCode').onclick = () => {
   const song = parseCode($('code').value);
   if(!song){ msg('That code wasn’t recognized. Codes look like trance-4K9QZ2.'); return; }
-  useSong(song, false); msg('Loaded “' + song.title + '”.');
+  useSong(song, false);
+  msg(song.fromVersion < COMPOSER_VERSION ? 'Loaded “' + song.title + '”. This code is from an earlier version of Loopbench, so its melodies and chords are now written differently.' : 'Loaded “' + song.title + '”.');
 };
 $('code').onkeydown = e => { if(e.key === 'Enter') $('loadCode').click(); };
 $('fav').onclick = () => {

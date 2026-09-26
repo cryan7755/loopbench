@@ -46,19 +46,19 @@ function playStep(p, s, tt){
   const T = (p.synth && p.synth.transpose) || 0;
   const feel = (s % 4 === 0 ? 1.08 : s % 2 === 0 ? 1 : 0.9) * (0.95 + Math.random()*0.1);
   const LS = p.leadSynth && Object.assign({}, p.leadSynth, {wave: remapPatch(patchOf(p.leadSynth), 'lead', p)});
-  if(p.lead && audible('lead')) p.lead.forEach(([r,st]) => { if(st === s) playNote(r, tt, state.mix.lead.vol*feel, LS); });
+  if(p.lead && audible('lead')) p.lead.forEach(([r,st,d]) => { if(st === s) playNote(r, tt, state.mix.lead.vol*feel, d ? Object.assign({}, LS, {len: d*0.95}) : LS); });
   if(p.wall && s === 0 && audible('wall')){
     const w = p.wall, wp = remapPatch('wall', 'wall', p);
     const top = w.ext && w.ext[3] !== undefined ? [60+w.T+w.ext[3]] : [];
-    [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T, ...top].forEach(m => synth(m, tt, w.len*stepDur(), wp, state.mix.wall.vol*(wp === 'wall' ? 1 : 0.8), {bright: w.bright}));
+    (w.voiced ? [48+w.T, ...w.voiced] : [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T, ...top]).forEach(m => synth(m, tt, w.len*stepDur(), wp, state.mix.wall.vol*(wp === 'wall' ? 1 : 0.8), {bright: w.bright}));
     if(samplesReady && (state.palette || 'hybrid') !== 'electronic' && (p.phase === 'breakdown' || p.label === 'Final drop' || (state.palette === 'orchestral' && p.phase === 'drop')))
-      [60+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2]].forEach(m => synth(m, tt, w.len*stepDur(), 'choir', state.mix.wall.vol));
+      (w.voiced || [60+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2]]).forEach(m => synth(m, tt, w.len*stepDur(), 'choir', state.mix.wall.vol));
     // real strings under the supersaws in builds and drops, the classic epic-trance layer
     if(samplesReady && (state.palette || 'hybrid') !== 'electronic' && wp === 'wall' && (p.phase === 'drop' || p.phase === 'build'))
-      [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T].forEach(m => synth(m, tt, w.len*stepDur(), 'strings', state.mix.wall.vol*0.6));
+      (w.voiced ? [48+w.T, ...w.voiced] : [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T]).forEach(m => synth(m, tt, w.len*stepDur(), 'strings', state.mix.wall.vol*0.6));
   }
   if(p.counter && audible('counter')) p.counter.forEach(([r,st]) => { if(st === s) synth(72 + p.counterT + r, tt, stepDur()*2, remapPatch((state.song && state.song.dna && state.song.dna.counter) || 'bell', 'counter', p), state.mix.counter.vol); });
-  if(p.gate && p.gate.pattern[s] && audible('wall')) (p.gate.ext || p.gate.ints).forEach(r => synth(60 + p.gate.T + r, tt, stepDur()*0.8, remapPatch('saws', 'gate', p), state.mix.wall.vol*0.45));
+  if(p.gate && p.gate.pattern[s] && audible('wall')) (p.gate.voiced || (p.gate.ext || p.gate.ints).map(r => 60 + p.gate.T + r)).forEach(m => synth(m, tt, stepDur()*0.8, remapPatch('saws', 'gate', p), state.mix.wall.vol*0.45));
   if(p.vocal && audible('vocal')) p.vocal.forEach(n => { if(n.s !== s) return;
     const vs = state.vocalStyle || 'oohs';
     if(hasUser('vocal')) synth(n.m, tt, n.len*stepDur(), 'user_vocal', state.mix.vocal.vol);
@@ -66,8 +66,8 @@ function playStep(p, s, tt){
     else if(vs === 'synth' || !samplesReady || !sampleBufs.voice_oohs) sing(n.m, tt, n.len*stepDur(), n.vw, state.mix.vocal.vol, {from:n.from, chop:n.chop});
     else singSampled(n.m, tt, n.len*stepDur(), state.mix.vocal.vol, {from:n.from, chop:n.chop, style:vs}); });
   const L2 = p.lead2Synth && Object.assign({}, p.lead2Synth, {wave: remapPatch(patchOf(p.lead2Synth), 'lead2', p)});
-  if(p.lead2 && audible('lead')) p.lead2.forEach(([r,st]) => { if(st === s) playNote(r, tt, state.mix.lead.vol*0.5, L2); });
+  if(p.lead2 && audible('lead')) p.lead2.forEach(([r,st,d]) => { if(st === s) playNote(r, tt, state.mix.lead.vol*0.5, d ? Object.assign({}, L2, {len: Math.min(d, 2)}) : L2); });
   if(p.sub && audible('sub')) for(let r=0;r<ROWS;r++) if(p.notes[r][s]) playSub(r, T, tt, state.mix.sub.vol, (p.synth && p.synth.len) || 0.9);
-  if(p.chords && audible('chords') && p.chords.steps.includes(s)) playChord(p.chords.T, tt, p.chords.len, state.mix.chords.vol, p.chords.ext || p.chords.ints, remapPatch(p.chords.patch || (p.chords.wide ? 'saws' : (p.chords.len > 2 ? 'pad' : 'stab')), 'chords', p));
+  if(p.chords && audible('chords') && p.chords.steps.includes(s)) playChord(p.chords.T, tt, p.chords.len, state.mix.chords.vol, p.chords.ext || p.chords.ints, remapPatch(p.chords.patch || (p.chords.wide ? 'saws' : (p.chords.len > 2 ? 'pad' : 'stab')), 'chords', p), p.chords.voiced);
   if(p.arp && audible('arp')) p.arp.forEach(([r,st]) => { if(st === s) playArp(r, p.arpT, tt, state.mix.arp.vol*feel, remapPatch(PATCHES[p.arpWave] ? p.arpWave : 'pluck', 'arp', p)); });
 }

@@ -162,11 +162,13 @@ function synth(midi, t, dur, name, v, opt = {}){
   sends(amp, P.rev, P.del, P.cho);
 }
 const MINOR = [0,3,7];
-function playChord(T, t, len, v, ints = MINOR, patch){
+function playChord(T, t, len, v, ints = MINOR, patch, voiced){
   patch = patch || (len > 2 ? 'pad' : 'stab');
   const full = state.quality !== 'light';
-  const voicing = patch === 'saws' && full ? [...ints, 12, ints[1]+12] : full ? [...ints, 12] : ints;
-  voicing.forEach(r => synth(60+T+r, t, len*stepDur(), patch, v*0.55));
+  let notes;
+  if(voiced) notes = patch === 'saws' && full ? [...voiced, voiced[voiced.length-1] + 12 - 12*(voiced[voiced.length-1] > 72)] : voiced;
+  else notes = (patch === 'saws' && full ? [...ints, 12, ints[1]+12] : full ? [...ints, 12] : ints).map(r => 60 + T + r);
+  notes.forEach(m => synth(m, t, len*stepDur(), patch, v*0.55));
   if(patch === 'pad' || patch === 'strings') synth(48+T, t, len*stepDur(), patch, v*0.5);
 }
 const playArp = (r, T, t, v, patch) => synth(72+T+r, t, stepDur()*0.5, PATCHES[patch] ? patch : 'pluck', v*0.7);
