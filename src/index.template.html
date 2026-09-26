@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Loopbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#D6DCE2; --panel:#EEF1F4; --well:#C7CFD8; --cell:#F8FAFB; --cell-alt:#E2E7EC;
+  --black-row:#D5DCE3; --ink:#1D252F; --muted:#5A6572; --line:#B9C2CC; --playhead:#1D252F;
+  --btn:#DDE3E9; --btn-on:#1D252F; --btn-on-ink:#F4F6F8; --play:#2FA56B;
+  --display:"Chakra Petch", "Bahnschrift", "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181D24; --panel:#232A33; --well:#12161B; --cell:#313A45; --cell-alt:#29313B;
+    --black-row:#1C2229; --ink:#E4E9EE; --muted:#93A0AE; --line:#39434F; --playhead:#E4E9EE;
+    --btn:#2F3842; --btn-on:#E4E9EE; --btn-on-ink:#181D24; --play:#3CC47F;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181D24; --panel:#232A33; --well:#12161B; --cell:#313A45; --cell-alt:#29313B;
+  --black-row:#1C2229; --ink:#E4E9EE; --muted:#93A0AE; --line:#39434F; --playhead:#E4E9EE;
+  --btn:#2F3842; --btn-on:#E4E9EE; --btn-on-ink:#181D24; --play:#3CC47F;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.app{max-width:1120px;margin:0 auto;padding:20px 16px 40px}
+h1{font-family:var(--display);font-weight:700;font-size:2rem;letter-spacing:.02em;margin:0;line-height:1}
+h2{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:0}
+.intro{color:var(--muted);margin:6px 0 18px;max-width:62ch}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--play);outline-offset:2px}
+
+.transport{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.play{font-family:var(--display);font-weight:700;font-size:1.05rem;border:0;border-radius:8px;background:var(--play);color:#fff;min-width:96px;height:44px;padding:0 18px}
+.play[aria-pressed="true"]{background:#D9534F}
+.field{display:flex;align-items:center;gap:8px}
+.field > span{font-family:var(--display);font-weight:600;color:var(--muted);font-size:.9rem}
+.bpm{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--cell)}
+.bpm button{border:0;background:var(--btn);width:32px;height:36px;font-size:1.1rem}
+.bpm input{width:56px;border:0;background:transparent;text-align:center;font-family:var(--display);font-weight:600;font-size:1.1rem;height:36px;-moz-appearance:textfield}
+.bpm input::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=range]{accent-color:var(--play);width:100px}
+.pats{display:flex;gap:4px}
+.chip{border:1px solid var(--line);background:var(--btn);border-radius:6px;height:36px;min-width:36px;padding:0 10px;font-family:var(--display);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--btn-on);color:var(--btn-on-ink);border-color:var(--btn-on)}
+.chip.has::after{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-left:5px;vertical-align:middle;opacity:.7}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+
+.rack{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px 16px;margin-bottom:16px}
+.rack-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;margin-bottom:12px}
+.scroll{overflow-x:auto;background:var(--well);border-radius:8px;padding:8px}
+.grid{min-width:720px;display:flex;flex-direction:column;gap:4px}
+.row{display:grid;grid-template-columns:210px repeat(16,minmax(26px,1fr));gap:4px;align-items:center}
+.head{display:flex;align-items:center;gap:4px;padding-right:6px;min-width:0}
+.ms{border:1px solid var(--line);background:var(--btn);border-radius:4px;width:24px;height:24px;font-family:var(--display);font-weight:600;font-size:.75rem;padding:0;flex:none}
+.ms.m[aria-pressed="true"]{background:#D9534F;color:#fff;border-color:#D9534F}
+.ms.s[aria-pressed="true"]{background:#E8B43A;color:#1D252F;border-color:#E8B43A}
+.name{flex:1;min-width:0;text-align:left;border:0;border-left:4px solid var(--ch);background:var(--cell);border-radius:4px;height:30px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.head input[type=range]{width:54px;flex:none}
+.step{height:32px;border:0;border-radius:4px;background:var(--cell);padding:0}
+.step.alt{background:var(--cell-alt)}
+.step.gap{margin-left:6px}
+.step.on{background:var(--ch)}
+.step.now{box-shadow:inset 0 0 0 2px var(--playhead)}
+.step.on.now{filter:brightness(1.2)}
+.roll .row{grid-template-columns:210px repeat(16,minmax(26px,1fr));gap:3px 4px}
+.roll .step{height:22px;border-radius:3px}
+.roll .black .step:not(.on){background:var(--black-row)}
+.key{font-family:var(--display);font-weight:600;font-size:.8rem;color:var(--muted);text-align:right;padding-right:10px;border-right:4px solid transparent}
+.black .key{color:var(--ink);opacity:.6}
+.row.c .key{color:var(--ink);opacity:1}
+.synth-controls{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+select{background:var(--cell);border:1px solid var(--line);border-radius:6px;height:34px;padding:0 8px}
+.layers{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.layers .head{background:var(--well);border-radius:8px;padding:6px}
+.song{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:-4px 2px 16px}
+.phase{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:999px;background:var(--btn);font-size:.85rem;vertical-align:middle}
+.phase.build{background:#E8B43A;color:#1D252F}
+.phase.breakdown{background:#6FC3FF;color:#1D252F}
+.phase.verse{background:#9CCB4E;color:#1D252F}
+.phase.drop{background:#D9534F;color:#fff}
+.code{font-family:var(--display);font-weight:600;letter-spacing:.03em;background:var(--cell);border:1px solid var(--line);border-radius:6px;height:34px;padding:0 10px;width:230px}
+.rowtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rowtools .lbl{font-family:var(--display);font-weight:600;color:var(--muted);font-size:.9rem;margin:0 4px 0 8px}
+.rowtools .lbl:first-child{margin-left:0}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.slot{background:var(--well);border:1px dashed var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.slot.drag{border-color:var(--play)}
+.slot .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.slot b{font-family:var(--display);font-weight:600}
+.slot .file{color:var(--muted);font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.slot select{height:30px}
+.hint{color:var(--muted);font-size:.85rem;margin:10px 2px 0}
+@media (max-width:600px){
+  h1{font-size:1.6rem}
+  .row,.roll .row{grid-template-columns:150px repeat(16,minmax(26px,1fr))}
+  .head input[type=range]{display:none}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Loopbench</h1>
+  <p class="intro">Click squares to build a beat, then press Play. Space bar starts and stops. Your work saves in this browser automatically.</p>
+
+  <section class="transport" aria-label="Transport">
+    <button class="play" id="play" aria-pressed="false">Play</button>
+    <div class="field"><span>Tempo</span>
+      <div class="bpm"><button id="bpmDown" aria-label="Slower">−</button><input id="bpm" type="number" min="60" max="200" aria-label="Beats per minute"><button id="bpmUp" aria-label="Faster">+</button></div>
+    </div>
+    <label class="field"><span>Swing</span><input id="swing" type="range" min="0" max="100"></label>
+    <label class="field"><span>Volume</span><input id="master" type="range" min="0" max="100"></label>
+    <div class="field"><span>Pattern</span><div class="pats" id="pats"></div></div>
+    <div class="tools">
+      <button class="chip" id="chain" aria-pressed="false" title="Play every non-empty pattern in order">Chain patterns</button>
+      <button class="play" id="newsong" style="background:#7B5CE0">New song</button>
+      <select id="palette" aria-label="Sound palette">
+        <option value="hybrid">Sound: hybrid</option><option value="orchestral">Sound: orchestral (no synths)</option><option value="electronic">Sound: all synth</option>
+      </select>
+      <select id="vocalStyle" aria-label="Vocal sound">
+        <option value="oohs">Vocals: sung oohs</option><option value="choir">Vocals: choir aahs</option><option value="synth">Vocals: synthesized</option><option value="off">Vocals: off</option>
+      </select>
+      <select id="quality" aria-label="Sound quality">
+        <option value="high">Quality: high</option><option value="balanced">Quality: balanced</option><option value="light">Quality: light (smoothest)</option>
+      </select>
+      <select id="genre" aria-label="Genre for new songs">
+        <option value="any">Any genre</option><option value="trance">Trance</option><option value="bigroom">Big room house</option>
+        <option value="progressive">Progressive house</option><option value="future">Future bass</option>
+        <option value="dubstep">Melodic dubstep</option><option value="dnb">Drum &amp; bass</option>
+        <option value="techno">Techno</option><option value="techhouse">Tech house</option><option value="deephouse">Deep house</option>
+        <option value="psytrance">Psytrance</option><option value="hardstyle">Hardstyle</option><option value="synthwave">Synthwave</option>
+        <option value="ukg">UK garage</option><option value="trap">Festival trap</option><option value="eurodance">Eurodance</option>
+      </select>
+      <button class="chip" id="jump" title="Skip ahead to the next build">Jump to build</button>
+      <button class="chip" id="nextsec" title="Skip to the start of the next section">Next section</button>
+      <button class="chip" id="render" aria-pressed="true" title="Pre-render bars on background threads for smooth playback on older computers">Smooth playback</button>
+      <button class="chip" id="endless" aria-pressed="false" title="Generate a fresh variation every bar">Endless mode</button>
+      <button class="chip" id="copy" title="Copy this pattern into the next slot">Copy to next</button>
+      <button class="chip" id="clear">Clear pattern</button>
+      <select id="preset" aria-label="Load a preset">
+        <option value="">Load preset…</option>
+        <option value="endless">Endless rush</option>
+        <option value="drop">Build and drop</option>
+        <option value="tight">Tight groove</option>
+        <option value="bright">Bright groove</option>
+      </select>
+    </div>
+  </section>
+  <p class="song" id="nowPlaying" hidden></p>
+  <section class="rack songtools" aria-label="Song tools">
+    <div class="rack-top"><h2>This song</h2>
+      <label class="field"><span>Song code</span><input id="code" class="code" spellcheck="false" aria-label="Song code"></label>
+      <button class="chip" id="copyCode">Copy</button>
+      <button class="chip" id="loadCode">Load code</button>
+      <button class="chip" id="fav">Save to favorites</button>
+      <select id="favs" aria-label="Favorite songs"><option value="">Favorites…</option></select>
+    </div>
+    <div class="rowtools">
+      <span class="lbl">Reroll</span>
+      <button class="chip" data-reroll="hook">New hook</button>
+      <button class="chip" data-reroll="chords">New chords</button>
+      <button class="chip" data-reroll="bass">New bassline</button>
+      <button class="chip" data-reroll="vocal">New vocal</button>
+      <button class="chip" data-reroll="drums">New groove</button>
+      <button class="chip" data-reroll="sound">New sounds</button>
+      <button class="chip" data-reroll="form">New structure</button>
+      <span class="lbl">Export</span>
+      <button class="chip" id="exportWav">Export WAV</button>
+      <button class="chip" id="exportMidi">Export MIDI</button>
+    </div>
+    <p class="hint" id="songMsg">Every song has a code. Paste one into the box and press Load code to bring it back exactly.</p>
+  </section>
+
+  <section class="rack" aria-label="Drums">
+    <div class="rack-top"><h2>Drums</h2></div>
+    <div class="scroll"><div class="grid" id="drums"></div></div>
+    <p class="hint">Click a drum's name to hear it. M mutes a channel, S solos it.</p>
+  </section>
+
+  <section class="rack roll" aria-label="Synth">
+    <div class="rack-top">
+      <h2>Synth</h2>
+      <div class="synth-controls" id="synthControls">
+        <label class="field"><span>Sound</span>
+          <select id="wave"><option value="lead">Supersaw lead</option><option value="pluck">Pluck</option><option value="stab">Chord stab</option><option value="saws">Supersaw chords</option><option value="pad">Pad</option><option value="wall">Chord wall</option><option value="piano">Piano</option><option value="strings">Strings</option><option value="choir">Choir</option><option value="harp">Harp</option><option value="pizz">Pizzicato strings</option><option value="violin">Violin</option><option value="ebass">Bass guitar</option><option value="bell">FM bell</option><option value="bass">Bass</option><option value="bigbass">Big room bass</option><option value="reese">Reese bass</option><option value="wobble">Wobble bass</option><option value="808">808 bass</option><option value="sub">Sub</option></select>
+        </label>
+        <label class="field"><span>Brightness</span><input id="cutoff" type="range" min="200" max="8000" step="50"></label>
+        <label class="field"><span>Octave</span>
+          <select id="octave"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+        </label>
+      </div>
+    </div>
+    <div class="scroll"><div class="grid" id="roll"></div></div>
+  </section>
+  <section class="rack" aria-label="Your samples">
+    <div class="rack-top"><h2>Your samples</h2><button class="chip" id="bulkPick">Load several files</button><button class="chip" id="clearAll">Remove all</button><input type="file" id="bulkInput" accept="audio/*" multiple hidden></div>
+    <div class="slots" id="slots"></div>
+    <p class="hint">Drop an audio file (WAV, MP3, OGG) onto a slot or click it to choose one, or use Load several files to fill the slots from file names. Drum slots replace that drum everywhere. For the one-note slots, pick the note your sample plays; it's then played at every pitch the song needs. Samples stay in this browser.</p>
+  </section>
+  <section class="rack" aria-label="Endless layers">
+    <div class="rack-top"><h2>Endless layers</h2></div>
+    <div class="layers" id="layers"></div>
+    <p class="hint">These extra instruments play in Endless mode. Click a name to hear it, and mute or solo them like any channel.</p>
+  </section>
+</main>
+
+<!-- @SAMPLES -->
+<!-- @APP -->
+</body>
+</html>
