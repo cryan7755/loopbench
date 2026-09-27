@@ -31,7 +31,7 @@ function generateBar(n){
   if(!base.seed){ base.seed = randomSeed(); base.parts = {chords:0, hook:0, bass:0, vocal:0, drums:0}; }
   const loc = locate(n); if(!loc) return null;
   seedWith(base.seed + '|bar|' + ((base.parts && base.parts.drums) || 0) + '|' + n);
-  try{ return barFor(base, loc, n); } finally { rnd = Math.random; }
+  try{ return applyEdits(barFor(base, loc, n), n); } finally { rnd = Math.random; }
 }
 function barFor(base, loc, n){
   let {sec, i} = loc; const song = sec.keyUp ? keyedSong(base) : base, st = STYLES[song.style];

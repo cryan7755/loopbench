@@ -185,6 +185,18 @@ select{background:var(--cell);border:1px solid var(--line);border-radius:6px;hei
     <p class="hint" id="songMsg">Every song has a code. Paste one into the box and press Load code to bring it back exactly.</p>
   </section>
 
+  <section class="rack" aria-label="Edit song">
+    <div class="rack-top"><h2>Edit song</h2>
+      <select id="edSec" aria-label="Section to edit"></select>
+      <div class="pats" id="edParts" aria-label="Part to edit"></div>
+      <button class="chip" id="edPrev" aria-label="Previous 4 bars">◀</button><span class="song" id="edPage" style="margin:0;font-size:.9rem"></span><button class="chip" id="edNext" aria-label="Next 4 bars">▶</button>
+      <label class="field"><span>Note length</span><select id="edLen"><option value="1">1/16</option><option value="2" selected>1/8</option><option value="4">1/4</option><option value="8">1/2</option><option value="16">Whole bar</option></select></label>
+      <button class="chip" id="edPlay">Play from here</button><button class="chip" id="edUndo">Undo</button><button class="chip" id="edReset">Reset these bars</button>
+    </div>
+    <div class="scroll"><canvas id="edCanvas" style="display:block;touch-action:none;cursor:crosshair"></canvas></div>
+    <p class="hint">Click an empty square to add a note; click a note to remove it. Shaded rows are outside the song's key. Edited bars show in orange, and edits are saved with the song, included in WAV and MIDI exports, and kept in favorites. Rerolling a part starts that song afresh.</p>
+  </section>
+
   <section class="rack" aria-label="Drums">
     <div class="rack-top"><h2>Drums</h2></div>
     <div class="scroll"><div class="grid" id="drums"></div></div>

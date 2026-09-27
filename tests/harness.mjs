@@ -22,7 +22,7 @@ export function loadApp({ offlineAudio, saved } = {}) {
   state, STYLES, FORMS, PART_KEYS, DRUMS, generateBar, makeSong, parseCode, songCode, arr, totalBars,
   playStep, renderBar, buildMidi, encodeWav, remapPatch, patchOf, stepDur, sampleBufs,
   SCALES, HARM_FUNC, COMPOSER_VERSION, makeProgression, progressionScore, voicingsFor, chordAtPos, keyOff,
-  hookBar, vocalBar, makeArrangement, guitarHit, writeLine, scoreLine, composeBest, hookOptions, vocalOptions, isChordTone, scaleNote, rootAtBar, seedWith,
+  hookBar, vocalBar, makeArrangement, guitarHit, applyEdits, barContent, editBar, edUndo, hasEdits, writeLine, scoreLine, composeBest, hookOptions, vocalOptions, isChordTone, scaleNote, rootAtBar, seedWith,
   useMock(m) { ctx = master = bus = revIn = delIn = delL = delR = busLP = busHP = choIn = delFb = drumBus = liveOut = m; },
   async useOfflineAudio(C) {
     const c = new C(2, 44100, 44100); ctx = c;
