@@ -84,7 +84,7 @@ function cycleBar(song, n, pos){
     }
     if(nearEnd(2)) x.pitchRiser = {midi: 60 + T, steps: 16 + gapAt};
     x.wall = {T, ints, ext, voiced, bass, len: i === 7 ? 12 : 16, bright: 0.6 + i*0.2};
-    if(beforeEnd(2)) x.vocal = vocalBar(song, hbar, T, ints, 0, null, phProg);
+    if(beforeEnd(2)) x.vocal = vocalBar(song, hbar, T, ints, 0, song.preVocal || null, phProg);   // the pre-chorus line climbs toward the chorus
     if(nearEnd(2)) x.vocal = [{s:0, len:16 + gapAt, m: 60 + T + ints[2] + (T < 0 ? 12 : 0), vw:['o','a','a'], from: null}];
     if(i === 7 && D.shout) x.vocal = [{s: gapAt, len: 16 - gapAt - 0.5, m: 72 + T + ints[1] - (T > 2 ? 12 : 0), vw:['a','a'], from: 60 + T + ints[2]}];
     // alternative build recipes

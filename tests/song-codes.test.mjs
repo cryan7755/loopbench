@@ -20,8 +20,9 @@ test('each reroll changes only its own part', () => {
   const owns = { chords: ['prog', 'bdProg', 'stab', 'harmony', 'sus', 'chordBars'], hook: ['dropHook', 'melody'], bass: ['riffs'], vocal: ['vocal', 'verseVocal'], sound: ['dna'], form: ['form'] };
   for (const [part, fields] of Object.entries(owns)) {
     const other = app.makeSong(base.style, base.seed, { ...base.parts, [part]: 1 });
-    // melodies are written to fit the chords, so new chords may also reshape the hook and vocal
-    const skip = part === 'chords' ? ['chords', 'hook', 'vocal'] : [part];
+    // melodies are written to fit the chords, and the vocal sings the hook's motif,
+    // so new chords may reshape the hook and vocal, and a new hook may reshape the vocal
+    const skip = part === 'chords' ? ['chords', 'hook', 'vocal'] : part === 'hook' ? ['hook', 'vocal'] : [part];
     const rest = Object.entries(owns).filter(([p]) => !skip.includes(p)).flatMap(([, f]) => f);
     assert.ok(same(base, other, ['title', 'key', 'bpm', 'scale', ...rest]), `rerolling ${part} changed other parts`);
     assert.ok(!same(base, other, fields) || part === 'form', `rerolling ${part} changed nothing`);
