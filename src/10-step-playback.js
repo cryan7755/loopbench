@@ -64,7 +64,7 @@ function playStep(p, s, tt){
   if(p.lead && audible('lead')) p.lead.forEach(([r,st,d]) => { if(st !== s) return;
     if(LS && LS.wave === 'gtrlead' && sampleBufs.gtr) guitarHit([12*(LS.octave + 1) + r + (LS.transpose || 0)], tt, (d || 2)*stepDur()*0.95, 'lead', state.mix.lead.vol*feel);
     else playNote(r, tt, state.mix.lead.vol*feel, d ? Object.assign({}, LS, {len: d*0.95}) : LS); });
-  if(p.gtr && audible('gtr')) p.gtr.forEach(h => { if(h.s === s) guitarHit(h.notes, tt, h.len*stepDur(), h.style, state.mix.gtr.vol*feel, h.down !== false); });
+  if(p.gtr && audible('gtr')) p.gtr.forEach(h => { if(h.s === s) guitarHit(h.notes, tt, h.len*stepDur(), h.style, state.mix.gtr.vol*feel*(p.gtrGain || 1), h.down !== false); });
   if(p.wall && s === 0 && audible('wall')){
     const w = p.wall, wp = remapPatch('wall', 'wall', p);
     const top = w.ext && w.ext[3] !== undefined ? [60+w.T+w.ext[3]] : [];

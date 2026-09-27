@@ -55,7 +55,7 @@ test('song structure varies from song to song and stays in sensible bounds', () 
       if (x.name === 'build') assert.ok(x.bars >= 8 && x.bars <= 16, `build of ${x.bars} bars`);
       if (x.name === 'drop') assert.ok(x.bars >= 16, `drop of only ${x.bars} bars`);
     }
-    const limit = s.form === 'radio' ? [1.5, 6] : app.STYLES[s.style].band ? [2.2, 7] : [2.5, 9];   // band songs are shorter than club tracks
+    const limit = s.form === 'radio' ? [1.5, 5.2] : app.STYLES[s.style].band ? [2, 6.2] : [2.5, 8.2];   // band songs are shorter than club tracks
     assert.ok(minutes >= limit[0] && minutes <= limit[1], `${app.songCode(s)} lasts ${minutes.toFixed(1)} minutes`);
   }
   assert.ok(shapes.size > 40, `only ${shapes.size} different structures in 150 songs`);

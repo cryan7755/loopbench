@@ -98,6 +98,15 @@ function bandBar(song, p, sec, i){
     if(last && ph !== 'outro'){ groove.snare = [4, 8, 10, 12, 13, 14, 15]; groove.tom = [11, 14]; groove.chat = [0,2,4,6]; }
     DRUMS.forEach((d, r) => { p.drums[r] = Array(STEPS).fill(false); (groove[d.id] || []).forEach(s => p.drums[r][s] = true); });
     p.half = null; p.gain = null; p.ride = ph === 'drop' && st.ride;
+    if(ph === 'build' && !last){
+      // the pre-chorus climbs: half-time and palm-muted first, then driving eighths and open chords
+      const firstHalf = i < sec.bars/2;
+      setDrum(p, 'chat', firstHalf ? [0,4,8,12] : [0,2,4,6,8,10,12,14]);
+      if(firstHalf && !st.doubleKick) setDrum(p, 'kick', [0, 8]);
+      if(!firstHalf && st.doubleKick) setDrum(p, 'kick', [...Array(16).keys()]);   // metal: the double kick arrives
+      if(i >= sec.bars - 2) setDrum(p, 'snare', [4, 10, 12, 14]);
+      if(p.gtr && st.gtr.build && ['power8', 'sustain', 'chug'].includes(st.gtr.build[0]) && firstHalf) p.gtr = GTR_PATTERNS.mute8(c);
+    }
   }
   // voice and lead: the chorus is sung; guitar bands answer with a lead guitar in the intro and the last chorus
   if(ph === 'drop') p.vocal = vocalBar(song, i, T, src.ints);
