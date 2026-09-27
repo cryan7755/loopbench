@@ -29,8 +29,11 @@ const VOCAL_CADENCES = [[[0,4],[4,12]], [[0,2],[2,2],[4,12]], [[0,16]], [[0,6],[
 
 function writeLine(song, o){
   const prog = o.prog, U = prog.length, bpu = song.chordBars || 1, form = pick(['sentence', 'period']);
-  const A = pick(o.cells), B = pick(o.cells), C = pick(o.cells), E = pick(o.cadences), tail = pick(o.cells);
-  const plan = form === 'sentence' ? [A, A, C, E] : [A, B, A, E];
+  // Hooks repeat one rhythm every bar so they lock to the groove; pitch carries the variation.
+  // The question ending (period) and the final cadence reuse the motif, then hold a long note.
+  const A = pick(o.cells), hold = (cell, at) => cell.filter(([s]) => s < at).concat([[at, 16 - at]]);
+  const E = o.motifCadence ? hold(A, 8) : pick(o.cadences), B = o.motifCadence ? hold(A, 12) : pick(o.cells), tail = A;
+  const plan = form === 'sentence' ? [A, A, A, E] : [A, B, A, E];
   const notes = [], unitStart = [];
   const sc = SCALES[song.scale];
   let prev = pick(o.start), prevInt = 0, run = 0, top = -99, bottom = 99;
@@ -139,10 +142,11 @@ const HOOK_SETTINGS = {
 function hookOptions(song){
   const style = song.melody || 'walk', rhythms = MELODY_RHYTHMS[style] || DROP_RHYTHMS;
   return Object.assign({prog: song.prog, cells: rhythms.map(r => cellFrom(r, style === 'floaty' ? 6 : 4)), cadences: HOOK_CADENCES,
-    lo: -2, hi: 9, start: [2, 4, 7], maxLeap: style === 'anthem' ? 5 : 4, maxSpan: style === 'anthem' ? 15 : 13}, HOOK_SETTINGS[style]);
+    lo: -2, hi: 9, start: [2, 4, 7], maxLeap: style === 'anthem' ? 5 : 4, maxSpan: style === 'anthem' ? 15 : 13, motifCadence: true}, HOOK_SETTINGS[style]);
 }
 function vocalOptions(song, part){
-  return {prog: song.prog, cells: VOCAL_CELLS, cadences: VOCAL_CADENCES, lo: part === 'verse' ? -3 : 1, hi: part === 'verse' ? 3 : 8,
+  const cell = pick(VOCAL_CELLS);   // one rhythm per vocal line, like a sung melody's repeating phrase
+  return {prog: song.prog, cells: [cell], cadences: VOCAL_CADENCES, lo: part === 'verse' ? -3 : 1, hi: part === 'verse' ? 3 : 8,
     start: part === 'verse' ? [0, 2] : [2, 4], centre: part === 'verse' ? 0 : 4.5, maxLeap: 4, maxSpan: part === 'verse' ? 9 : 12, stepTarget: 0.7, predictTarget: 0.45, repeat: 1.5};
 }
 function composeHook(song){ return Object.assign(composeBest(song, hookOptions(song)), {v: COMPOSER_VERSION, style: song.melody}); }

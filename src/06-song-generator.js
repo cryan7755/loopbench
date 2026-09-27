@@ -166,8 +166,35 @@ const FORMS = {
 };
 Object.values(FORMS).forEach(f => { let acc = 0; f.list = f.secs.map(([name,label,bars,opt]) => { const x = Object.assign({name, label, bars, start: acc}, opt || {}); acc += bars; return x; }); f.total = acc; });
 const formOf = song => FORMS[song && song.form] || FORMS.classic;
-const arr = () => formOf(state.song).list;
-const totalBars = () => formOf(state.song).total;
+// Each song gets its own section lengths, always in whole 8, 16, 32 or 64-bar blocks (dance music's grid).
+// The block is chosen to land nearest a target duration for the song's tempo, with a little freedom.
+const SEC_SECONDS = {intro:[22,45], verse:[18,40], breakdown:[28,60], build:[10,22], drop:[30,60], bridge:[18,35], outro:[15,30]};
+const SEC_BLOCKS  = {intro:[8,16,32], verse:[8,16,32], breakdown:[16,32], build:[8,16], drop:[16,32,64], bridge:[8,16], outro:[8,16]};
+function makeArrangement(song, formKey){
+  const f = FORMS[formKey] || FORMS.classic, barsPerSec = song.bpm/240, short = formKey === 'radio';
+  return f.secs.map(([name, label, , opt]) => {
+    let bars = 2;
+    if(name !== 'fake'){
+      let [lo, hi] = SEC_SECONDS[name], blocks = SEC_BLOCKS[name];
+      if(short){ lo *= 0.6; hi *= 0.6; blocks = blocks.filter(b => b <= 32); }
+      if(label === 'Final drop' || label === 'Main drop'){ lo *= 1.2; hi *= 1.4; }
+      if(label === 'Opening'){ lo = 18; hi = 36; blocks = [8, 16]; }
+      const target = (lo + rnd()*(hi - lo))*barsPerSec;
+      const ranked = blocks.slice().sort((x, y) => Math.abs(Math.log2(x/target)) - Math.abs(Math.log2(y/target)));
+      bars = ranked.length > 1 && chance(0.2) ? ranked[1] : ranked[0];
+    }
+    return Object.assign({name, label, bars}, opt || {});
+  });
+}
+const arrCache = new WeakMap();
+function arr(){
+  const s = state.song;
+  if(!s || !s.arrangement) return formOf(s).list;
+  let a = arrCache.get(s.arrangement);
+  if(!a){ let at = 0; a = s.arrangement.map(x => { const y = Object.assign({}, x, {start: at}); at += x.bars; return y; }); a.total = at; arrCache.set(s.arrangement, a); }
+  return a;
+}
+const totalBars = () => { const a = arr(); return a.total || formOf(state.song).total; };
 function makeSong(style, seed, parts){
   seed = seed || randomSeed(); parts = Object.assign({chords:0, hook:0, bass:0, vocal:0, drums:0, sound:0, form:0}, parts || {});
   const R = tag => seedWith(seed + '|' + tag + '|' + (parts[tag] || 0));
@@ -186,7 +213,7 @@ function makeSong(style, seed, parts){
     R('bass');   Object.assign(song, {riffs: [makeRiff(), makeRiff(), makeRiff()], bassWave: pick(['sawtooth','square']), leadWave: pick(['square','sawtooth']), arpWave: 'pluck'});
     R('vocal');  Object.assign(song, {vocal: composeVocal(song, 'chorus'), verseVocal: composeVocal(song, 'verse')});
     R('sound');  song.dna = makeDNA(style);
-    R('form');   song.form = pick(Object.keys(FORMS));
+    R('form');   song.form = pick(Object.keys(FORMS)); song.arrangement = makeArrangement(song, song.form);
     return song;
   } finally { rnd = Math.random; }
 }

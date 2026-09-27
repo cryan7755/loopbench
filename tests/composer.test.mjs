@@ -87,3 +87,13 @@ test('most hooks resolve to a note of the home chord', () => {
   const home = songs.filter(s => s.dropHook.rating.endsHome).length / songs.length;
   assert.ok(home >= 0.75, `only ${(home * 100).toFixed(0)}% of hooks end on a home-chord note`);
 });
+
+test('hooks keep one rhythm through the phrase, changing only at the ending', () => {
+  for (const s of songs) {
+    const bars = {}; s.dropHook.notes.forEach(n => (bars[n.bar] = bars[n.bar] || []).push(n.s));
+    const rhythms = new Set(Object.values(bars).map(a => a.join(',')));
+    assert.ok(rhythms.size <= 3, `${app.songCode(s)}: ${rhythms.size} different rhythms in one hook`);
+    const counts = {}; Object.values(bars).forEach(a => counts[a.join(',')] = (counts[a.join(',')] || 0) + 1);
+    assert.ok(Math.max(...Object.values(counts)) >= Object.keys(bars).length / 2, `${app.songCode(s)}: no rhythm dominates the hook`);
+  }
+});
