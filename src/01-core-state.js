@@ -7,6 +7,8 @@ let edState = null;
 let ENSEMBLE_ON = true;
 // The energy shaper (src/19-energy.js), switchable for comparison
 let ENERGY_ON = true;
+// Bass-line shaping (src/20-bassline.js), switchable for comparison
+let BASS_ON = true;
 const STEPS = 16, ROWS = 13, KEY = 'loopbench-v1';
 const DRUMS = [
   {id:'kick',  name:'Kick',       color:'#F2A93B'},

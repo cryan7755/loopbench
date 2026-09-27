@@ -31,7 +31,7 @@ function generateBar(n){
   if(!base.seed){ base.seed = randomSeed(); base.parts = {chords:0, hook:0, bass:0, vocal:0, drums:0}; }
   const loc = locate(n); if(!loc) return null;
   seedWith(base.seed + '|bar|' + ((base.parts && base.parts.drums) || 0) + '|' + n);
-  try{ let p = barFor(base, loc, n); if(ENSEMBLE_ON) p = arrangeEnsemble(p, base); if(ENERGY_ON) p = shapeEnergy(p, base); return applyEdits(p, n); } finally { rnd = Math.random; }
+  try{ let p = barFor(base, loc, n); if(ENSEMBLE_ON) p = arrangeEnsemble(p, base); if(BASS_ON) p = shapeBass(p, base, n); if(ENERGY_ON) p = shapeEnergy(p, base); return applyEdits(p, n); } finally { rnd = Math.random; }
 }
 function barFor(base, loc, n){
   let {sec, i} = loc; const song = sec.keyUp ? keyedSong(base) : base, st = STYLES[song.style];

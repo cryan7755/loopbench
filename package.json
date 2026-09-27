@@ -6,11 +6,14 @@
   "type": "module",
   "license": "MIT",
   "author": "Chris Ryan",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "watch": "node scripts/build.mjs --watch",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "critic": "node scripts/critic.mjs"
   },
   "devDependencies": {
     "node-web-audio-api": "^2.2.0"

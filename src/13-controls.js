@@ -124,6 +124,11 @@ document.querySelectorAll('[data-reroll]').forEach(b => b.onclick = () => {
   msg('New ' + b.textContent.replace(/^New /, '') + ' for “' + sg.title + '”. Everything else stays the same.' + (hadEdits ? ' Your note edits were cleared, since they belonged to the previous version.' : ''));
 });
 const fileBase = () => (state.song ? state.song.title.replace(/[^A-Za-z0-9 ]/g, '').trim().replace(/ +/g, '-') : 'loopbench') + '-' + (state.song ? songCode(state.song) : '');
+$('report').onclick = () => {
+  if(!state.song){ msg('Press New song first.'); return; }
+  const r = songReport(state.song), s = r.scores;
+  msg(`Song report: ${r.overall}/100. Melody ${s.melody}, harmony ${s.harmony}, ensemble ${s.ensemble}, counterpoint ${s.counterpoint}, energy ${s.energy}, structure ${s.structure}.`);
+};
 $('exportMidi').onclick = async () => {
   if(!state.song){ msg('Press New song first.'); return; }
   try{ await saveFile(fileBase() + '.mid', buildMidi()); msg('MIDI exported: one track per part, with section markers.'); }
