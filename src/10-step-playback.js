@@ -10,6 +10,19 @@ function scheduleStep(s, t){
   playStep(p, s, tt);
   queue.push({s, t:tt, pat:playPattern, p});
 }
+// Groove: accents and ghost notes like a drummer, with hats sitting slightly behind the beat
+const HAT_ACCENT = [0.8, 0.55, 1, 0.62];
+function drumVel(id, s, p){
+  const r = 0.94 + Math.random()*0.12;
+  if(id === 'chat' || id === 'shaker' || id === 'ohat') return HAT_ACCENT[s % 4]*r;
+  if(id === 'snare' && p.phase !== 'build' && !p.half) return (s % 8 === 4 ? 1 : 0.5)*r;
+  if(id === 'kick') return s % 4 === 0 ? 1 : 0.86;
+  return r;
+}
+function drumNudge(id, s){
+  if(id === 'chat' || id === 'shaker') return (s % 2 ? 0.004 : 0.001) + Math.random()*0.002;
+  return 0;
+}
 function playStep(p, s, tt){
   const gain = id => (p.gain && p.gain[id]) || 1;
   if(s === 0 && busLP){
@@ -34,8 +47,9 @@ function playStep(p, s, tt){
   DRUMS.forEach((d,i) => {
     if(!p.drums[i][s] || !audible(d.id)) return;
     const hit = drumSample(d.id), pitchArg = d.id === 'kick' ? 1 : extra(d.id);
-    const play = at => hit ? playHit(hit, at, state.mix[d.id].vol*gain(d.id), pitchArg) : VOICES[d.id](at, state.mix[d.id].vol*gain(d.id), extra(d.id));
-    play(tt);
+    const v = state.mix[d.id].vol*gain(d.id)*drumVel(d.id, s, p), at0 = tt + drumNudge(d.id, s);
+    const play = at => hit ? playHit(hit, at, v, pitchArg) : VOICES[d.id](at, v, extra(d.id));
+    play(at0);
     if(p.half && p.half[d.id] && p.half[d.id].includes(s)) play(tt + stepDur()/2);
   });
   if(p.pitchRiser && s === 0 && audible('fx')) pitchRiser(p.pitchRiser.midi, tt, p.pitchRiser.steps*stepDur(), 12, state.mix.fx.vol);

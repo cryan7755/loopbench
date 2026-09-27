@@ -1,6 +1,6 @@
 /* Lead-in: pads and vocals fade up through an opening filter, percussion creeps in, then a swell into the beat */
-function introBar(i, song){
-  const {T, ints, ext, voiced} = chordAtPos(song, i);
+function introBar(i, song, bar = i){
+  const {T, ints, ext, voiced} = chordAtPos(song, bar);
   const eighths = [0,2,4,6,8,10,12,14];
   const d = {};
   if(i >= 4) d.shaker = [2,6,10,14];
@@ -15,18 +15,21 @@ function introBar(i, song){
     wall: {T, ints, ext, voiced, len:16, bright: 0.35 + i*0.08},
     counter: i >= 2 ? counterLine(song, ints, [], i >= 4 ? 3 : 2) : null, counterT:T,
     arp: i >= 4 ? eighths.map((s,k) => [tones[k % 4], s]) : null, arpT:T, arpWave:'pluck',
-    vocal: i >= 2 && i < 6 ? vocalBar(song, i, T, ints) : i === 6 ? [{s:0, len:24, m: 60 + T + ints[2] + (T < 0 ? 12 : 0), vw:['u','o','a'], from:null}] : null,
+    vocal: i >= 2 && i < 6 ? vocalBar(song, bar, T, ints) : i === 6 ? [{s:0, len:24, m: 60 + T + ints[2] + (T < 0 ? 12 : 0), vw:['u','o','a'], from:null}] : null,
     riser: i >= 6 ? {bar: i - 1, cut:16} : null,
     gain: {snare: 0.6}, swell: i === 7 ? {s:8, steps:8} : null,
   });
 }
-function cycleBar(song, n){
+// pos = {bar, bars}: where this bar really sits in its section, so harmony and melody follow the true bar
+// and events like the pitch riser land relative to the section's end, whatever its length
+function cycleBar(song, n, pos){
   const st = STYLES[song.style], sc = SCALES[song.scale];
   const cyc = n % 32, c = Math.floor(n/32);
   const phase = cyc < 8 ? 'groove' : cyc < 16 ? 'build' : 'drop';
   const i = phase === 'groove' ? cyc : phase === 'build' ? cyc-8 : cyc-16;
   const K = norm(song.key), row = g => g >= 7 ? 12 : sc[g];
-  const {T, ints, ext, voiced} = phase === 'build' && i >= 6 ? chordAtPos(song, i, song.prog, 3) : chordAtPos(song, i);
+  const hbar = pos ? pos.bar : i, nearEnd = k => pos ? pos.bar === pos.bars - k : i === 8 - k, beforeEnd = k => pos ? pos.bar < pos.bars - k : i < 8 - k;
+  const {T, ints, ext, voiced} = phase === 'build' && i >= 6 ? chordAtPos(song, hbar, song.prog, 3) : chordAtPos(song, hbar);
   const sym = {r:0, o:12, '3':ints[1], '5':ints[2]};
   const riff = r => r.map(([k,s]) => [sym[k], s]);
   const all16 = [...Array(16).keys()], eighths = [0,2,4,6,8,10,12,14];
@@ -50,7 +53,7 @@ function cycleBar(song, n){
     if(i >= 4) x.chords = {steps: song.stab || [2,6,10,14], len:1, T, ints, ext, voiced, patch:'stab'};
     if(c > 0){ x.arp = arp(eighths, [0,1,2,3]); x.arpT = T; x.arpWave = (song.dna && song.dna.arp) || 'pluck'; }
     x.wall = {T, ints, ext, voiced, len:16, bright:0.7};
-    if(i >= 4) x.vocal = vocalBar(song, i, T, ints);
+    if(i >= 4) x.vocal = vocalBar(song, hbar, T, ints);
     if(i >= 4){ x.counter = counterLine(song, ints, [], 2); x.counterT = T; }
   } else if(phase === 'build'){
     // Bars 1-2 quarters, 3-4 eighths, 5-6 sixteenths, 7 sixteenths, 8 thirty-seconds.
@@ -73,14 +76,14 @@ function cycleBar(song, n){
     x.busFilter = {lp:[lpAt(i), lpAt(i+1)], hp:[hpAt(i), hpAt(i+1)]};
     x.riser = {bar:i, cut};
     x.chords = {steps:[0], len: i === 7 ? 12 : 16, T, ints, ext, voiced, patch:'pad'};
-    if(i < 6){
-      x.lead = hookBar(song, i);
+    if(beforeEnd(2)){
+      x.lead = hookBar(song, hbar);
       x.leadSynth = {wave:'pluck', bright: 0.5 + i*0.15, octave:4, transpose:T, len:0.6};
     }
-    if(i === 6) x.pitchRiser = {midi: 60 + T, steps: 16 + gapAt};
+    if(nearEnd(2)) x.pitchRiser = {midi: 60 + T, steps: 16 + gapAt};
     x.wall = {T, ints, ext, voiced, len: i === 7 ? 12 : 16, bright: 0.6 + i*0.2};
-    if(i < 6) x.vocal = vocalBar(song, i, T, ints);
-    if(i === 6) x.vocal = [{s:0, len:16 + gapAt, m: 60 + T + ints[2] + (T < 0 ? 12 : 0), vw:['o','a','a'], from: null}];
+    if(beforeEnd(2)) x.vocal = vocalBar(song, hbar, T, ints);
+    if(nearEnd(2)) x.vocal = [{s:0, len:16 + gapAt, m: 60 + T + ints[2] + (T < 0 ? 12 : 0), vw:['o','a','a'], from: null}];
     if(i === 7 && D.shout) x.vocal = [{s: gapAt, len: 16 - gapAt - 0.5, m: 72 + T + ints[1] - (T > 2 ? 12 : 0), vw:['a','a'], from: 60 + T + ints[2]}];
     // alternative build recipes
     if(D.build === 'filter'){ d.snare = i >= 6 ? upTo(eighths) : []; d.kick = upTo([0,4,8,12]); x.half = null; x.gain = {snare:0.6}; }
@@ -97,7 +100,7 @@ function cycleBar(song, n){
     if(chance(0.2)) d.bell = pick([[6,14],[3,10]]);
     if(i % 4 === 3 && !fillBar && chance(0.5)) d.kick.push(14,15);
     if(fillBar){ d.snare = d.snare.concat(i === 15 ? [8,10,12,13,14,15] : [12,13,14,15]); d.tom = i === 15 ? [11,13,15] : [14,15]; }
-    const hb = hookBar(song, i), K = keyOff(song);
+    const hb = hookBar(song, hbar), K = keyOff(song);
     // the bass locks to the hook's rhythm, jumping up an octave under its high notes
     notes = st.dropRhythm ? st.dropRhythm.map((s,k) => [k % 4 === 3 ? 12 : 0, s]) : hb.map(([r, s]) => [r >= 7 ? 12 : 0, s]);
     const dropBass = (song.dna && song.dna.dropBass) || st.dropBass, wob = dropBass === 'wobble';
@@ -117,7 +120,7 @@ function cycleBar(song, n){
     if(i >= 8){ x.lead2 = x.lead; x.lead2Synth = {wave:'pluck', bright:1.2, octave:5, transpose:K, len:0.6}; }
     x.wall = {T, ints, ext, voiced, len:16, bright: i >= 8 ? 1.3 : 1};
     if(i < 8 && !fillBar) x.vocal = hb.filter((_, k) => k % 2 === 0).map(([r, s], k) => ({s, len:0.9, m: 60 + K + r, vw:[k % 2 ? 'e' : 'a'], chop:true}));
-    if(i >= 8) x.vocal = vocalBar(song, i, T, ints);
+    if(i >= 8) x.vocal = vocalBar(song, hbar, T, ints);
     if(!fillBar && (i >= 4)){ x.counter = counterLine(song, ints, hb.map(n => n[1]), i >= 8 ? 4 : 2); x.counterT = T; }
   }
   return Object.assign(buildPattern(d, notes), x);

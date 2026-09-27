@@ -32,7 +32,7 @@ function rStart(){
   rItems.forEach(it => {
     if(it.started || !it.buf) return;
     it.started = true;
-    const start = rT0 + it.rel, src = ctx.createBufferSource(); src.buffer = it.buf; src.connect(liveGraph.master);
+    const start = rT0 + it.rel, src = ctx.createBufferSource(); src.buffer = it.buf; src.connect(liveOut);
     if(start >= now) src.start(start);
     else if(now - start < it.sd*16){ src.start(now, now - start); rAhead = Math.min(8, rAhead + 1); }
     else return;

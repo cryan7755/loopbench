@@ -7,7 +7,7 @@ $('bpmDown').onclick = () => setBpm(state.bpm-1);
 $('bpmUp').onclick = () => setBpm(state.bpm+1);
 $('swing').value = state.swing; $('swing').oninput = e => { state.swing = +e.target.value; save(); };
 $('master').value = Math.round(state.master*100);
-$('master').oninput = e => { state.master = e.target.value/100; if(liveGraph) liveGraph.master.gain.value = state.master; save(); };
+$('master').oninput = e => { state.master = e.target.value/100; if(liveOut) liveOut.gain.value = state.master; save(); };
 const NOTE_OPTS = []; for(let m=24;m<=84;m++) NOTE_OPTS.push([m, NOTE_NAMES[m%12] + (Math.floor(m/12)-1)]);
 function paintSlots(){
   USER_SLOTS.forEach(sl => {

@@ -6,10 +6,12 @@ function hookTease(song, i, every = 2, prog){
   return hookBar(song, i, prog).filter((_, k) => k % every === 0);
 }
 // groove sections are 16 bars; reuse the 8-bar groove with a fill only on the last bar
-const grooveIdx = i => i < 8 ? (i === 7 ? 6 : i) : (i === 15 ? 7 : 4 + ((i-8) % 3));
+const grooveIdx = (i, n = 16) => i === n - 1 ? 7 : i < 7 ? i : 4 + ((i - 7) % 3);
+// stretch or squeeze an 8-step recipe (0-7) across n bars, always ending on its final step
+const scale8 = (i, n) => i === n - 1 ? 7 : Math.min(6, Math.floor(i*7/Math.max(1, n - 1)));
 function breakdownBar(song, i, bars, second){
   const {T, ints, ext, voiced} = chordAtPos(song, i, song.bdProg);
-  const stage = second ? 2 + Math.floor(i/8) : Math.floor(i/8);
+  const stage = second ? 2 + Math.min(1, Math.floor(i*2/bars)) : Math.min(3, Math.floor(i*4/bars));
   const p = buildPattern(i === 0 ? {crash:[0]} : {}, []);
   const x = {sub:false, wall:{T, ints, ext, voiced, len:16, bright: 0.7 + stage*0.15}, busFilter:{lp:[20000,20000], hp:[70,70]},
     chords:{steps:[0], len:16, T, ints, ext, voiced, patch:'pad'}, counter: counterLine(song, ints, [], stage >= 2 ? 3 : 2), counterT:T};
@@ -35,16 +37,18 @@ function barFor(base, loc, n){
   let {sec, i} = loc; const song = sec.keyUp ? keyedSong(base) : base, st = STYLES[song.style];
   let p;
   if(sec.name === 'intro'){
-    if(i < 8) p = introBar(i, song);
+    const half = Math.max(4, Math.floor(sec.bars/2));
+    if(i < half) p = introBar(scale8(i, half), song, i);
     else {
       // the beat arrives: drums and bass, synths still muffled, a first taste of the hook
-      p = cycleBar(song, i - 8);
+      const j = i - half, n2 = sec.bars - half, g = scale8(j, n2);
+      p = cycleBar(song, g, {bar: i, bars: sec.bars});
       Object.assign(p, {vocal:null, counter:null, chords:null, arp:null});
-      p.busFilter = {lp:[700*Math.pow(1.2,i-8), 700*Math.pow(1.2,i-7)], hp:[20,20]};
-      if(i >= 12){ p.lead = hookTease(song, i - 8, 2); p.leadSynth = {wave:'pluck', bright:0.6, octave:4, transpose:keyOff(song), len:0.6}; }
+      p.busFilter = {lp:[700*Math.pow(1.2, g), 700*Math.pow(1.2, g + 1)], hp:[20,20]};
+      if(j >= n2/2){ p.lead = hookTease(song, i, 2); p.leadSynth = {wave:'pluck', bright:0.6, octave:4, transpose:keyOff(song), len:0.6}; }
     }
   } else if(sec.name === 'verse'){
-    p = cycleBar(song, 32 + grooveIdx(i));
+    p = cycleBar(song, 32 + grooveIdx(i, sec.bars), {bar: i, bars: sec.bars});
     p.impact = false; if(i === 0) setDrum(p, 'crash', [0]);
     if(i === 0 && sec.second) p.down = true;
     p.busFilter = {lp:[3500 + i*300, 3800 + i*300], hp:[20,20]};
@@ -75,10 +79,10 @@ function barFor(base, loc, n){
       p.wall = null; p.gate = null; p.duck = false;
     } else { p = cycleBar(song, 8 + 5); p.kick = null; setDrum(p, 'kick', []); }
   } else if(sec.name === 'build'){
-    p = cycleBar(song, (sec.second ? 32 : 0) + 8 + i);
+    p = cycleBar(song, (sec.second ? 32 : 0) + 8 + scale8(i, sec.bars), {bar: i, bars: sec.bars});
   } else if(sec.name === 'drop'){
-    const di = i % 16;
-    p = cycleBar(song, (Math.floor(i/16) % 2 ? 32 : 0) + 16 + di);
+    const di = i === sec.bars - 1 ? 15 : i % 16;   // the last bar is always a fill into what comes next
+    p = cycleBar(song, (Math.floor(i/16) % 2 ? 32 : 0) + 16 + di, {bar: i, bars: sec.bars});
     if(i > 0 && i % 16 === 0){ setDrum(p, 'crash', [0]); p.impact = false; }
     if(sec.second){
       // the final drop: everything doubled, wider chords, the vocal carries through
@@ -90,7 +94,7 @@ function barFor(base, loc, n){
   } else {
     // outro: synths fade and filter away, drums thin out, one last chord rings
     const last = i === sec.bars - 1; i = Math.floor(i*16/sec.bars);
-    p = cycleBar(song, 32 + grooveIdx(i));
+    p = cycleBar(song, 32 + grooveIdx(i), {bar: loc.i, bars: sec.bars});
     Object.assign(p, {vocal: i < 4 ? p.vocal : null, counter:null, lead:null, arp: i < 4 ? p.arp : null, impact:false});
     if(i === 0){ setDrum(p, 'crash', [0]); p.down = true; }
     p.busFilter = {lp:[Math.max(700, 6000*Math.pow(0.8,i)), Math.max(700, 6000*Math.pow(0.8,i+1))], hp:[20,20]};

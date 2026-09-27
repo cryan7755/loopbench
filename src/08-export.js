@@ -18,10 +18,11 @@ async function renderSongAudio(onProgress){
   // same output stage as live playback: trim, glue compressor, limiter
   const off = new OAC(2, total, sr), src = off.createBufferSource(), buf = off.createBuffer(2, total, sr);
   buf.copyToChannel(L, 0); buf.copyToChannel(R, 1); src.buffer = buf;
-  const trim = off.createGain(); trim.gain.value = 0.4*state.master;
+  const trim = off.createGain(); trim.gain.value = 0.45*state.master;
+  const clip = off.createWaveShaper(); clip.curve = curve(1.15); clip.oversample = '4x';
   const glue = off.createDynamicsCompressor(); glue.threshold.value = -14; glue.ratio.value = 3; glue.attack.value = 0.01; glue.release.value = 0.15;
   const limit = off.createDynamicsCompressor(); limit.threshold.value = -3; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.08;
-  src.connect(trim); trim.connect(glue); glue.connect(limit); limit.connect(off.destination); src.start(0);
+  src.connect(trim); trim.connect(clip); clip.connect(glue); glue.connect(limit); limit.connect(off.destination); src.start(0);
   const out = await off.startRendering();
   // normalize so the file peaks just under full scale
   let pk = 0; for(let c=0;c<2;c++){ const d = out.getChannelData(c); for(let i=0;i<d.length;i++){ const a = Math.abs(d[i]); if(a > pk) pk = a; } }

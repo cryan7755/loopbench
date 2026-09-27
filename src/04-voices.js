@@ -19,12 +19,13 @@ async function decodeUser(slot){
 }
 async function decodeAllUser(){ for(const k of Object.keys(userRaw)){ try{ await decodeUser(k); }catch(e){ console.warn('Could not decode', k, e); } } }
 function sampler(midi, t, dur, P, v){
-  const zones = sampleBufs[P.sample];
+  // strings below the violins' range are played by the cello section
+  const zones = P.sample === 'strings' && midi < 55 && sampleBufs.cello ? sampleBufs.cello : sampleBufs[P.sample];
   let z = zones[0]; for(const c of zones) if(Math.abs(c.m - midi) < Math.abs(z.m - midi)) z = c;
   const src = ctx.createBufferSource(); src.buffer = z.buf;
   const rate = Math.pow(2, (midi - z.m)/12); src.playbackRate.value = rate;
   const natural = z.buf.duration / rate;
-  if(P.loop && dur > natural - 0.5){ src.loop = true; src.loopStart = 1.0; src.loopEnd = z.buf.duration - 0.35; }
+  if(P.loop && dur > natural - 0.5){ src.loop = true; src.loopStart = z.le ? z.ls : 1.0; src.loopEnd = z.le ? z.le : z.buf.duration - 0.35; }
   const amp = ctx.createGain(), pk = v*(P.gain || 0.8), a = P.a || 0.003, hold = t + Math.max(dur, a + 0.01), r = P.r || 0.3;
   amp.gain.setValueAtTime(0.0001, t);
   amp.gain.linearRampToValueAtTime(pk, t + a);
@@ -50,9 +51,9 @@ function remapPatch(name, role, p){
     if(role === 'bass') return 'ebass';
     if(role === 'lead') return calm ? 'piano' : 'violin';
     if(role === 'lead2') return 'piano';
-    if(role === 'arp') return calm ? 'harp' : 'pizz';
+    if(role === 'arp') return calm ? 'harp' : ph === 'drop' || ph === 'build' ? 'spic' : 'pizz';
     if(role === 'counter') return 'harp';
-    if(role === 'gate') return 'pizz';
+    if(role === 'gate') return 'spic';
     if(role === 'wall') return 'strings';
     if(role === 'chords') return name === 'pad' ? 'strings' : 'piano';
     return name;
@@ -75,7 +76,7 @@ function drumSample(id){
 }
 function playHit(buf, t, v, pitch){
   const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = typeof pitch === 'number' ? pitch : 1;
-  const g = ctx.createGain(); g.gain.value = v*1.1; src.connect(g); g.connect(master); sends(g, 0.12); src.start(t);
+  const g = ctx.createGain(); g.gain.value = v*1.1; src.connect(g); g.connect(drumBus || master); sends(g, 0.12); src.start(t);
 }
 const LEGACY = {sawtooth:'lead', square:'pluck', triangle:'pluck', sine:'sub', supersaw:'bigbass'};
 const patchOf = S => PATCHES[S.wave] ? S.wave : (LEGACY[S.wave] || 'lead');
@@ -117,6 +118,12 @@ function synth(midi, t, dur, name, v, opt = {}){
       f.frequency.setValueAtTime(Math.min(18000, cut + P.env*bright*track), t);
       f.frequency.exponentialRampToValueAtTime(Math.max(60, cut), t + P.fdecay);
     } else f.frequency.value = cut;
+    if(P.flfo && !P.lfo && i === 0 && dur > 0.5){
+      // slow filter movement so held sounds breathe
+      const l = ctx.createOscillator(), lg = ctx.createGain();
+      l.frequency.value = P.flfo[0]*(0.85 + Math.random()*0.3); lg.gain.value = cut*P.flfo[1];
+      l.connect(lg); lg.connect(f.frequency); l.start(t); l.stop(stopAt);
+    }
   });
   head.connect(filters[0]); if(filters[1]) filters[0].connect(filters[1]);
   let tail = filters[filters.length - 1];
