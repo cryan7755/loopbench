@@ -3,6 +3,8 @@
 const COMPOSER_VERSION = 4;
 // The song editor's state; declared here so the interface can safely check it while loading
 let edState = null;
+// The ensemble arranger (src/18-ensemble.js); switchable so its effect can be compared
+let ENSEMBLE_ON = true;
 const STEPS = 16, ROWS = 13, KEY = 'loopbench-v1';
 const DRUMS = [
   {id:'kick',  name:'Kick',       color:'#F2A93B'},

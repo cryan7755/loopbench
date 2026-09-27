@@ -10,6 +10,7 @@ Everything runs in the browser. The built app is a single self-contained HTML fi
 - **Band genres** use a recorded electric guitar through a simulated amp and cabinet (clean, crunch, distortion, palm-muted chugs, double-tracked left and right), a bass guitar part, and a recorded acoustic drum kit; sections become intro, verse, pre-chorus, chorus and bridge
 - **Full song forms:** classic, cold open, extended mix, fake-out drop, radio edit, with section lengths chosen per song from its tempo and phrase length, so no two songs share the same structure
 - **Composed, not just randomised:** chord progressions are built from harmonic function (home, departure, tension) and voice-led so chords glide; hooks and vocal lines are written as sentences or question-and-answer periods, generated dozens of times and ranked by rules from music-cognition research (chord tones on strong beats, resolved leaps, a single well-placed peak, a firm cadence, a middle amount of predictability)
+- **Arranged as an ensemble:** one foreground melody at a time (the lead answers in the singer's gaps; in EDM drops the voice doubles the hook), supporting lines kept above the melody and away from its new notes, and no semitone clashes between lines
 - **Per-song variety:** sound design, chord language (7ths, add9, sus), melody style, build recipe, drum kit, delay timing and trance gates all vary per song
 - **Sound palettes:** hybrid, orchestral (no synths) or all synth; recorded string sections, solo violin, cellos, contrabass, harp, grand piano, choir and orchestral percussion; recorded sung vocals
 - **Mix and master:** drum bus with parallel compression and saturation, key-tuned kicks, drum accents and groove, stereo widening, master EQ, soft clipping, glue compression and limiting
@@ -57,6 +58,7 @@ The app is plain JavaScript with no framework. `scripts/build.mjs` joins the fil
 | `src/15-composer.js` | Melody writing: phrase shapes, generate-and-rank, the melody critic |
 | `src/16-band.js` | Band genres: guitar amp simulation, guitar and bass parts, live drum arrangement |
 | `src/17-editor.js` | Song editor: piano roll, per-bar edits applied on top of the generated song, undo |
+| `src/18-ensemble.js` | Ensemble arranger: one foreground melody, separate registers, no semitone rubs; plus the audit used by the tests |
 | `assets/samples/<instrument>/<midi-note>.mp3` | Instrument samples |
 | `assets/vocals/<bank>/<midi-note>.wav` | Vocal samples; loop points in `loops.json` |
 | `tests/` | Test suite (`node --test`) |
