@@ -40,4 +40,23 @@ test('genre settings are respected', () => {
   }
 });
 
-function makeFor(style, form) { const s = app.makeSong(style); s.form = form; return s; }
+function makeFor(style, form) { const s = app.makeSong(style); s.form = form; s.arrangement = app.makeArrangement(s, form); return s; }
+
+test('song structure varies from song to song and stays in sensible bounds', () => {
+  const shapes = new Set(), lengths = [];
+  for (let k = 0; k < 150; k++) {
+    const s = app.makeSong(Object.keys(app.STYLES)[k % Object.keys(app.STYLES).length]);
+    app.state.song = s;
+    const secs = app.arr(), bars = app.totalBars(), minutes = bars * 240 / s.bpm / 60;
+    shapes.add(secs.map(x => x.bars).join('-'));
+    lengths.push(minutes);
+    for (const x of secs) {
+      if (x.name !== 'fake') assert.equal(x.bars % 8, 0, `${x.label} is ${x.bars} bars, off the 8-bar grid`);
+      if (x.name === 'build') assert.ok(x.bars >= 8 && x.bars <= 16, `build of ${x.bars} bars`);
+      if (x.name === 'drop') assert.ok(x.bars >= 16, `drop of only ${x.bars} bars`);
+    }
+    const limit = s.form === 'radio' ? [1.5, 5] : [3, 9];
+    assert.ok(minutes >= limit[0] && minutes <= limit[1], `${app.songCode(s)} lasts ${minutes.toFixed(1)} minutes`);
+  }
+  assert.ok(shapes.size > 40, `only ${shapes.size} different structures in 150 songs`);
+});
