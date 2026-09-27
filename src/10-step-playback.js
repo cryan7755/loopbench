@@ -46,7 +46,7 @@ function playStep(p, s, tt){
   const extra = id => id === 'kick' ? p.bigKick : (p.pitch && p.pitch[id]) || 1;
   DRUMS.forEach((d,i) => {
     if(!p.drums[i][s] || !audible(d.id)) return;
-    const hit = drumSample(d.id), pitchArg = d.id === 'kick' ? 1 : extra(d.id);
+    const hit = drumSample(d.id, p), pitchArg = d.id === 'kick' ? 1 : extra(d.id);
     const v = state.mix[d.id].vol*gain(d.id)*drumVel(d.id, s, p), at0 = tt + drumNudge(d.id, s);
     const play = at => hit ? playHit(hit, at, v, pitchArg) : VOICES[d.id](at, v, extra(d.id));
     play(at0);
@@ -60,7 +60,10 @@ function playStep(p, s, tt){
   const T = (p.synth && p.synth.transpose) || 0;
   const feel = (s % 4 === 0 ? 1.08 : s % 2 === 0 ? 1 : 0.9) * (0.95 + Math.random()*0.1);
   const LS = p.leadSynth && Object.assign({}, p.leadSynth, {wave: remapPatch(patchOf(p.leadSynth), 'lead', p)});
-  if(p.lead && audible('lead')) p.lead.forEach(([r,st,d]) => { if(st === s) playNote(r, tt, state.mix.lead.vol*feel, d ? Object.assign({}, LS, {len: d*0.95}) : LS); });
+  if(p.lead && audible('lead')) p.lead.forEach(([r,st,d]) => { if(st !== s) return;
+    if(LS && LS.wave === 'gtrlead' && sampleBufs.gtr) guitarHit([12*(LS.octave + 1) + r + (LS.transpose || 0)], tt, (d || 2)*stepDur()*0.95, 'lead', state.mix.lead.vol*feel);
+    else playNote(r, tt, state.mix.lead.vol*feel, d ? Object.assign({}, LS, {len: d*0.95}) : LS); });
+  if(p.gtr && audible('gtr')) p.gtr.forEach(h => { if(h.s === s) guitarHit(h.notes, tt, h.len*stepDur(), h.style, state.mix.gtr.vol*feel, h.down !== false); });
   if(p.wall && s === 0 && audible('wall')){
     const w = p.wall, wp = remapPatch('wall', 'wall', p);
     const top = w.ext && w.ext[3] !== undefined ? [60+w.T+w.ext[3]] : [];

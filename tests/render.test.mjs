@@ -27,3 +27,17 @@ test('sections render at sane levels in every sound palette', { skip: !OfflineAu
     }
   }
 });
+
+test('band genres render with guitars and a live kit', { skip: !OfflineAudioContext && 'node-web-audio-api not installed', timeout: 240000 }, async () => {
+  const app = loadApp({ offlineAudio: OfflineAudioContext });
+  await app.useOfflineAudio(OfflineAudioContext);
+  assert.ok(app.sampleBufs.gtr?.length && app.sampleBufs.rockkit?.length, 'guitar and kit samples decoded');
+  for (const style of ['rock', 'metal', 'pop', 'altrock', 'dancepop']) {
+    Object.assign(app.state, { palette: 'hybrid', vocalStyle: 'oohs' });
+    app.state.song = app.makeSong(style); app.state.bpm = app.state.song.bpm;
+    for (const sec of app.arr()) {
+      const { peak, rms } = measure(await app.renderBar(app.generateBar(sec.start + Math.floor(sec.bars / 2))));
+      assert.ok(peak < 6 && rms > 0.005, `${style}: ${sec.label} peak ${peak.toFixed(2)} rms ${rms.toFixed(4)}`);
+    }
+  }
+});

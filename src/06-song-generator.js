@@ -42,6 +42,32 @@ const STYLES = {
   eurodance:   {label:'eurodance', bpm:[138,145], kicks:[[0,4,8,12]], snare:[], clap:[4,12], hats:[1,3,5,7,9,11,13,15], ohat:[2,6,10,14], rolls:0.2,
                 grooveBass:'bass', dropBass:'bass', dropLead:'sqlead', dropRhythm:[2,6,10,14], scales:['major','minor'],
                 bassPool:['bass','bigbass'], leadPool:['sqlead','lead','piano'], hatsPool:['offbeat','eighths'], kit:{kick:1.05}},
+  // Band genres: live-style drums, guitars through an amp, bass guitar; sections become verse, pre-chorus and chorus
+  rock:        {label:'rock', band:true, acoustic:true, ride:true, guitarLead:true, bpm:[110,140], kicks:[[0,8],[0,6,8],[0,8,10],[0,3,8,10]], snare:[4,12], clap:[],
+                hats:[0,2,4,6,8,10,12,14], rolls:0.1, grooveBass:'rockbass', dropBass:'rockbass', dropLead:'lead', scales:['major','minor','dorian'],
+                bassPool:['rockbass'], leadPool:['lead'], hatsPool:['eighths'], forms:['classic','radio','cold'],
+                gtr:{intro:['power8','crunch'], verse:['mute8','crunch'], build:['power8','crunch'], drop:['power8','dist'], breakdown:['arp','clean'], bridge:['sustain','dist'], outro:['sustain','dist']},
+                bass:{verse:'eighths', build:'eighths', drop:'eighths', breakdown:'whole', bridge:'whole', outro:'whole'}},
+  pop:         {label:'pop', band:true, acoustic:true, softSnare:true, keepSynths:true, bpm:[96,122], kicks:[[0,8],[0,8,10],[0,4,8,12]], snare:[4,12], clap:[4,12],
+                hats:[0,2,4,6,8,10,12,14], rolls:0.15, grooveBass:'rockbass', dropBass:'rockbass', dropLead:'pluck', scales:['major','major','minor'],
+                bassPool:['rockbass'], leadPool:['pluck','piano','bell'], hatsPool:['eighths'], forms:['radio','classic'],
+                gtr:{intro:['strumSparse','clean'], verse:['strumSparse','clean'], build:['strum','clean'], drop:['strum','clean'], breakdown:['arp','clean'], bridge:['strum','clean'], outro:['strumSparse','clean'], introQuiet:false},
+                bass:{verse:'pop', build:'pop', drop:'pop', breakdown:'whole', bridge:'pop', outro:'whole'}},
+  dancepop:    {label:'dance pop', band:true, keepSynths:true, keepDrumsInBreakdown:false, bpm:[116,126], kicks:[[0,4,8,12]], snare:[], clap:[4,12],
+                hats:[2,6,10,14], ohat:[2,6,10,14], rolls:0.2, grooveBass:'rockbass', dropBass:'rockbass', dropLead:'pluck', scales:['minor','major','dorian'],
+                bassPool:['rockbass'], leadPool:['pluck','sqlead','piano'], hatsPool:['offbeat','sixteenths'], forms:['radio','classic','extended'],
+                gtr:{intro:['funk','cleanmute'], verse:['funk','cleanmute'], build:['funk','cleanmute'], drop:['funk','cleanmute'], breakdown:['strumSparse','clean'], bridge:['funk','cleanmute'], outro:['funk','cleanmute'], introQuiet:false},
+                bass:{verse:'disco', build:'disco', drop:'disco', breakdown:'whole', bridge:'disco', outro:'disco'}},
+  altrock:     {label:'alt rock', band:true, acoustic:true, ride:true, guitarLead:true, bpm:[100,130], kicks:[[0,8,10],[0,6,8],[0,8]], snare:[4,12], clap:[],
+                hats:[0,2,4,6,8,10,12,14], rolls:0.1, grooveBass:'rockbass', dropBass:'rockbass', dropLead:'lead', scales:['minor','dorian','major'],
+                bassPool:['rockbass'], leadPool:['lead'], hatsPool:['eighths'], forms:['classic','radio','cold'],
+                gtr:{intro:['arp','clean'], verse:['arp','clean'], build:['mute8','crunch'], drop:['sustain','dist'], breakdown:['arp','clean'], bridge:['power8','crunch'], outro:['sustain','dist']},
+                bass:{verse:'whole', build:'eighths', drop:'eighths', breakdown:'whole', bridge:'eighths', outro:'whole'}},
+  metal:       {label:'metal', band:true, acoustic:true, ride:true, guitarLead:true, doubleKick:true, gallop:true, lowTuning:true, bpm:[140,180],
+                kicks:[[0,8],[0,3,8,11],[0,2,8,10]], snare:[4,12], clap:[], hats:[0,2,4,6,8,10,12,14], rolls:0.1, grooveBass:'rockbass', dropBass:'rockbass', dropLead:'lead',
+                scales:['phrygian','minor'], bassPool:['rockbass'], leadPool:['lead'], hatsPool:['eighths'], forms:['classic','cold','radio'],
+                gtr:{intro:['sustain','dist'], verse:['chug','dist'], build:['chug','dist'], drop:['power8','dist'], breakdown:['arp','clean'], bridge:['chug','dist'], outro:['sustain','dist'], introQuiet:false},
+                bass:{verse:'driving16', build:'driving16', drop:'eighths', breakdown:'whole', bridge:'driving16', outro:'whole'}},
 };
 const SCALES = {minor:[0,2,3,5,7,8,10], dorian:[0,2,3,5,7,9,10], phrygian:[0,1,3,5,7,8,10], major:[0,2,4,5,7,9,11]};
 const PROGS = [[0,5,3,4],[0,3,4,0],[0,5,2,6],[0,6,5,6],[0,3,0,4],[5,3,0,4],[0,4,5,3],[0,5,6,4],[0,2,5,6],[3,4,0,5],[0,6,3,4],[5,6,0,0],[0,3,5,6]];
@@ -177,12 +203,14 @@ function makeArrangement(song, formKey){
     if(name !== 'fake'){
       let [lo, hi] = SEC_SECONDS[name], blocks = SEC_BLOCKS[name];
       if(short){ lo *= 0.6; hi *= 0.6; blocks = blocks.filter(b => b <= 32); }
+      if(STYLES[song.style] && STYLES[song.style].band){ lo *= 0.75; hi *= 0.75; }   // band songs run shorter than club tracks
       if(label === 'Final drop' || label === 'Main drop'){ lo *= 1.2; hi *= 1.4; }
       if(label === 'Opening'){ lo = 18; hi = 36; blocks = [8, 16]; }
       const target = (lo + rnd()*(hi - lo))*barsPerSec;
       const ranked = blocks.slice().sort((x, y) => Math.abs(Math.log2(x/target)) - Math.abs(Math.log2(y/target)));
       bars = ranked.length > 1 && chance(0.2) ? ranked[1] : ranked[0];
     }
+    if(STYLES[song.style] && STYLES[song.style].band) label = BAND_LABELS[label] || label;
     return Object.assign({name, label, bars}, opt || {});
   });
 }
@@ -213,7 +241,7 @@ function makeSong(style, seed, parts){
     R('bass');   Object.assign(song, {riffs: [makeRiff(), makeRiff(), makeRiff()], bassWave: pick(['sawtooth','square']), leadWave: pick(['square','sawtooth']), arpWave: 'pluck'});
     R('vocal');  Object.assign(song, {vocal: composeVocal(song, 'chorus'), verseVocal: composeVocal(song, 'verse')});
     R('sound');  song.dna = makeDNA(style);
-    R('form');   song.form = pick(Object.keys(FORMS)); song.arrangement = makeArrangement(song, song.form);
+    R('form');   song.form = pick(STYLES[style].forms || Object.keys(FORMS)); song.arrangement = makeArrangement(song, song.form);
     return song;
   } finally { rnd = Math.random; }
 }

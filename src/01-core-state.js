@@ -22,6 +22,7 @@ const LAYERS = [
   {id:'vocal',  name:'Vocals', color:'#FF8FB1'},
   {id:'wall',   name:'Chord wall', color:'#F7B267'},
   {id:'counter',name:'Counter melody', color:'#B8E1FF'},
+  {id:'gtr',    name:'Guitars', color:'#E0703C'},
   {id:'fx',     name:'Riser and impact', color:'#C8CED6'},
 ];
 const SYNTH_COLOR = '#9CCB4E';

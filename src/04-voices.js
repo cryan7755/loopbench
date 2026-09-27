@@ -35,7 +35,7 @@ function sampler(midi, t, dur, P, v){
   src.start(t); src.stop(hold + r + 0.05);
 }
 // Which instrument plays each role, by sound palette and song section
-const HOUSE = new Set(['bigroom','progressive','deephouse','techhouse','eurodance','ukg']);
+const HOUSE = new Set(['bigroom','progressive','deephouse','techhouse','eurodance','ukg','pop','dancepop']);
 const hasUser = slot => !!(sampleBufs['user_' + slot] && sampleBufs['user_' + slot].length);
 function remapPatch(name, role, p){
   if(!p || !p.phase) return name;
@@ -69,8 +69,16 @@ function remapPatch(name, role, p){
 }
 // drum hits: your samples, or the acoustic kit in the orchestral palette
 const KIT_NOTES = {kick:36, rim:37, snare:38, clap:39, chat:42, tom:45, ohat:46, crash:49, bell:56, shaker:70};
-function drumSample(id){
+const ROCK_NOTES = {kick:36, snare:40, clap:38, chat:42, ohat:46, crash:49, tom:45, rim:51, bell:51, shaker:42};
+function drumSample(id, p){
   if(hasUser(id)) return sampleBufs['user_' + id][0].buf;
+  const st = state.song && STYLES[state.song.style];
+  if(st && st.acoustic && sampleBufs.rockkit){
+    let k = ROCK_NOTES[id];
+    if(id === 'snare' && st.softSnare) k = 38;
+    if(id === 'chat' && p && p.ride) k = 51;
+    const z = sampleBufs.rockkit.find(z => z.m === k); if(z) return z.buf;
+  }
   if(state.palette === 'orchestral' && samplesReady && sampleBufs.kit){ const z = sampleBufs.kit.find(z => z.m === KIT_NOTES[id]); if(z) return z.buf; }
   return null;
 }

@@ -108,5 +108,6 @@ function barFor(base, loc, n){
       p.wall = {T, ints, ext, voiced, len:24, bright:0.8};
     }
   }
+  if(STYLES[song.style].band) bandBar(song, p, sec, loc.i);
   return Object.assign(p, {phase: sec.name, label: sec.label, barIn: loc.i, bars: sec.bars, n});
 }

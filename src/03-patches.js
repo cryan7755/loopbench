@@ -13,6 +13,7 @@ const PATCHES = {
   wall:    {osc:'sawtooth', voices:9, spread:38, width:1,   cutoff:1800, env:1200, fdecay:0.6,   q:0.9, a:0.05,  d:0.6,  s:0.85, r:0.8,  rev:0.48, del:0.05, cho:0.4, hp:160, slope:24, gain:0.18, flfo:[0.09,0.3]},
   bell:    {fm:true, ratio:3.5, index:6, idecay:0.35, voices:2, spread:7, width:0.6, cutoff:12000,  q:0.7, a:0.002, d:0.9,  s:0,    r:0.6,  rev:0.45, del:0.3,  gain:0.3},
   '808':   {osc:'sine',     voices:1, cutoff:1400, q:0.7, a:0.003, d:0.4, s:0.85, r:0.3, drive:3.5, gain:0.6},
+  rockbass:{osc:'sawtooth', voices:1, cutoff:650, env:1400, fdecay:0.12, q:1.4, a:0.002, d:0.3, s:0.7, r:0.08, drive:2.4, sub:0.35, subOsc:'sine', slope:24, gain:0.5},
   sub:     {osc:'sine',     voices:1,                        cutoff:500,                         q:0.7, a:0.004, d:0.2,  s:1,    r:0.06, drive:1.3,          gain:0.42},
 };
 Object.assign(PATCHES, {
@@ -28,6 +29,7 @@ Object.assign(PATCHES, {
   user_bass:  {sample:'user_bass',  a:0.003, r:0.1,  gain:1.0, rev:0,    del:0,    fallback:'bass'},
   user_pad:   {sample:'user_pad',   a:0.08,  r:0.6,  gain:0.7, rev:0.45, del:0.05, loop:true, fallback:'wall'},
   user_vocal: {sample:'user_vocal', a:0.01,  r:0.25, gain:0.9, rev:0.45, del:0.3,  fallback:'pluck'},
+  gtrlead: {sample:'gtr', a:0.003, r:0.2, gain:0.8, rev:0.25, del:0.2, fallback:'sqlead'},
   pizz:    {sample:'pizz',    a:0.002, r:0.25, gain:1.0,  rev:0.35, del:0.2,  fallback:'pluck'},
 });
 const sampleBufs = {}; let samplesReady = false, samplesPromise = null;

@@ -6,7 +6,8 @@ Everything runs in the browser. The built app is a single self-contained HTML fi
 
 ## Features
 
-- **15 genres:** trance, big room, progressive house, future bass, melodic dubstep, drum & bass, techno, tech house, deep house, psytrance, hardstyle, synthwave, UK garage, festival trap, eurodance
+- **20 genres:** trance, big room, progressive house, future bass, melodic dubstep, drum & bass, techno, tech house, deep house, psytrance, hardstyle, synthwave, UK garage, festival trap, eurodance, plus band genres: rock, alt rock, metal, pop and dance pop
+- **Band genres** use a recorded electric guitar through a simulated amp and cabinet (clean, crunch, distortion, palm-muted chugs, double-tracked left and right), a bass guitar part, and a recorded acoustic drum kit; sections become intro, verse, pre-chorus, chorus and bridge
 - **Full song forms:** classic, cold open, extended mix, fake-out drop, radio edit, with section lengths chosen per song from its tempo and phrase length, so no two songs share the same structure
 - **Composed, not just randomised:** chord progressions are built from harmonic function (home, departure, tension) and voice-led so chords glide; hooks and vocal lines are written as sentences or question-and-answer periods, generated dozens of times and ranked by rules from music-cognition research (chord tones on strong beats, resolved leaps, a single well-placed peak, a firm cadence, a middle amount of predictability)
 - **Per-song variety:** sound design, chord language (7ths, add9, sus), melody style, build recipe, drum kit, delay timing and trance gates all vary per song
@@ -53,6 +54,7 @@ The app is plain JavaScript with no framework. `scripts/build.mjs` joins the fil
 | `src/12-ui.js`, `src/13-controls.js` | Interface and controls |
 | `src/14-harmony.js` | Functional chord progressions and voice-led chord voicings |
 | `src/15-composer.js` | Melody writing: phrase shapes, generate-and-rank, the melody critic |
+| `src/16-band.js` | Band genres: guitar amp simulation, guitar and bass parts, live drum arrangement |
 | `assets/samples/<instrument>/<midi-note>.mp3` | Instrument samples |
 | `assets/vocals/<bank>/<midi-note>.wav` | Vocal samples; loop points in `loops.json` |
 | `tests/` | Test suite (`node --test`) |
