@@ -5,6 +5,8 @@ const COMPOSER_VERSION = 6;
 let edState = null;
 // The ensemble arranger (src/18-ensemble.js); switchable so its effect can be compared
 let ENSEMBLE_ON = true;
+// The energy shaper (src/19-energy.js), switchable for comparison
+let ENERGY_ON = true;
 const STEPS = 16, ROWS = 13, KEY = 'loopbench-v1';
 const DRUMS = [
   {id:'kick',  name:'Kick',       color:'#F2A93B'},

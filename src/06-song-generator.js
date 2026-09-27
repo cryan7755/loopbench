@@ -207,7 +207,7 @@ const SEC_SECONDS = {intro:[22,45], verse:[18,40], breakdown:[28,60], build:[10,
 const SEC_BLOCKS  = {intro:[8,16,32], verse:[8,16,32], breakdown:[16,32], build:[8,16], drop:[16,32,64], bridge:[8,16], outro:[8,16]};
 function makeArrangement(song, formKey){
   const f = FORMS[formKey] || FORMS.classic, barsPerSec = song.bpm/240, short = formKey === 'radio';
-  return f.secs.map(([name, label, , opt]) => {
+  const secs = f.secs.map(([name, label, , opt]) => {
     let bars = 2;
     if(name !== 'fake'){
       let [lo, hi] = SEC_SECONDS[name], blocks = SEC_BLOCKS[name];
@@ -222,6 +222,14 @@ function makeArrangement(song, formKey){
     if(STYLES[song.style] && STYLES[song.style].band) label = BAND_LABELS[label] || label;
     return Object.assign({name, label, bars}, opt || {});
   });
+  // keep songs a sensible length: halve the longest sections until the song fits
+  const cap = short ? 5 : STYLES[song.style] && STYLES[song.style].band ? 6 : 8, minutes = () => secs.reduce((a, x) => a + x.bars, 0)*240/song.bpm/60;
+  for(let guard = 0; minutes() > cap && guard < 12; guard++){
+    const big = secs.filter(x => x.name !== 'build' && x.name !== 'fake' && x.bars >= 16).sort((a, b) => b.bars - a.bars)[0];
+    if(!big) break;
+    big.bars /= 2;
+  }
+  return secs;
 }
 const arrCache = new WeakMap();
 function arr(){

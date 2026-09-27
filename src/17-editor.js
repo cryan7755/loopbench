@@ -194,4 +194,5 @@ $('edPlay').onclick = () => { const R = edRange(); if(R) goToBar(R.first); };
 $('edCanvas').addEventListener('pointerdown', edClick);
 document.addEventListener('keydown', e => { if((e.ctrlKey || e.metaKey) && e.key === 'z' && !['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)){ e.preventDefault(); edUndo(); } });
 window.addEventListener && window.addEventListener('resize', () => edDraw());
-edRefresh();
+// first draw once every source file has loaded (a saved song generates bars, which needs all modules)
+setTimeout(edRefresh, 0);
