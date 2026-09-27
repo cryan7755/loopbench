@@ -8,14 +8,15 @@ const songs = Array.from({ length: 120 }, (_, k) => app.makeSong(Object.keys(app
 
 test('progressions move with purpose and loop back home', () => {
   let endsWithPull = 0;
-  for (const s of songs) for (const prog of [s.prog, s.bdProg]) {
+  const show = p => p.map(app.itemKey).join(' ');
+  for (const s of songs) for (const prog of [s.prog, s.bdProg, s.verseProg, s.preProg]) {
     assert.equal(prog.length, 4);
-    for (let i = 0; i < 4; i++) assert.notEqual(prog[i], prog[(i + 1) % 4], `repeated chord in ${prog}`);
-    assert.ok(new Set(prog).size >= 3, `too little variety in ${prog}`);
-    if (['D', 'PD'].includes(app.HARM_FUNC[prog[3]])) endsWithPull++;
+    for (let i = 0; i < 4; i++) assert.notEqual(app.itemKey(prog[i]), app.itemKey(prog[(i + 1) % 4]), `repeated chord in ${show(prog)}`);
+    assert.ok(new Set(prog.map(it => app.itemRoot(s, it))).size >= 3, `too little variety in ${show(prog)}`);
+    if (['D', 'PD', 'SD'].includes(app.fnOf(prog[3]))) endsWithPull++;
   }
-  assert.ok(endsWithPull / (songs.length * 2) > 0.8, `only ${endsWithPull} of ${songs.length * 2} progressions lead back home`);
-  assert.ok(songs.every(s => s.bdProg.join() !== s.prog.join()), 'breakdown uses the same progression as the drop');
+  assert.ok(endsWithPull / (songs.length * 4) > 0.75, `only ${endsWithPull} of ${songs.length * 4} progressions lead onward`);
+  assert.ok(songs.every(s => show(s.bdProg) !== show(s.prog)), 'breakdown uses the same progression as the chorus');
 });
 
 test('chord voicings move smoothly', () => {

@@ -69,7 +69,8 @@ const BAND_LABELS = {'Build':'Pre-chorus', 'Build 2':'Pre-chorus 2', 'Real build
 function bandBar(song, p, sec, i){
   const st = STYLES[song.style], ph = sec.name, last = i === sec.bars - 1;
   const bd = ph === 'breakdown' || ph === 'bridge';
-  const src = p.wall || p.chords || p.gate || chordAtPos(song, i, bd ? song.bdProg : song.prog);
+  const secProg = bd ? song.bdProg : ph === 'build' ? song.preProg : ph === 'drop' ? song.prog : song.verseProg || song.prog;
+  const src = p.wall || p.chords || p.gate || chordAtPos(song, i, secProg), bo = src.bass || 0;
   const T = src.T, third = src.ints[1], fifth = src.ints[2];
   const low = st.lowTuning ? 38 : 40, root = low + (((T % 12) + 12) % 12 - low % 12 + 12) % 12;
   // strip the dance-music production
@@ -84,7 +85,7 @@ function bandBar(song, p, sec, i){
   const bp = (st.bass && (st.bass[ph] || st.bass.verse)) || 'eighths';
   if(!(ph === 'intro' && quietIntro)){
     p.notes = Array.from({length:ROWS}, () => Array(STEPS).fill(false));
-    BASS_PATTERNS[bp](c).forEach(([r, s]) => { if(r >= 0 && r < ROWS) p.notes[r][s] = true; });
+    BASS_PATTERNS[bp](c).forEach(([r, s]) => { r = r === 0 ? bo : r === 12 && bo ? bo : r; if(r >= 0 && r < ROWS) p.notes[r][s] = true; });
     p.synth = {wave:'rockbass', bright:1, octave:2, transpose:T, len: bp === 'whole' ? 7.5 : bp === 'driving16' ? 0.9 : 1.6};
   }
   p.sub = false;
