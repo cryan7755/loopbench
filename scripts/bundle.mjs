@@ -37,8 +37,9 @@ export function sampleSource() {
   }
   const loops = JSON.parse(readFileSync(join(vdir, 'loops.json'), 'utf8'));
   return [
-    '/* Sampled instruments: piano, strings, choir, harp, pizzicato, violin, electric bass and a drum kit',
-    '   from the FluidR3_GM soundfont (MIT licence, Frank Wen). See LICENSES/. */',
+    '/* Recorded instruments: string sections, solo violin, contrabass, harp and orchestral percussion from the',
+    '   Versilian Studios Chamber Orchestra 2 CE; grand piano, hand claps, hi-hats, snare and shaker from the',
+    '   Versilian Community Sample Library. Both public domain (CC0). See LICENSES/. */',
     'const SAMPLE_DATA = ' + JSON.stringify(samples) + ';',
     '/* Sung vowels: Concert Choir and Voice Oohs from GeneralUser GS v1.471 by S. Christian Collins. See LICENSES/. */',
     'const VOX_DATA = ' + JSON.stringify(vocals) + ';',

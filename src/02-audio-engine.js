@@ -2,7 +2,7 @@
 const QUALITY = {high:{voices:1, ir:2.8, formants:4, doubles:2}, balanced:{voices:0.8, ir:2.2, formants:4, doubles:2}, light:{voices:0.35, ir:1.3, formants:3, doubles:1}};
 const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 const Q = () => QUALITY[state.quality || (IS_MOBILE ? 'light' : 'balanced')] || QUALITY.balanced;
-let choIn, delFb, conv, ctx, master, bus, busLP, busHP, noiseBuf, revIn, delIn, delL, delR;
+let drumBus, liveOut, choIn, delFb, conv, ctx, master, bus, busLP, busHP, noiseBuf, revIn, delIn, delL, delR;
 const curves = {};
 function curve(k){
   if(curves[k]) return curves[k];
@@ -16,10 +16,29 @@ function getIR(){ const k = Q().ir; return irCache[k] || (irCache[k] = makeIR(k)
 function makeGraph(c, offline){
   const prev = ctx; ctx = c;
   const g = {ctx:c};
-  g.master = c.createGain();
+  const eq = (type, f, gain, q) => { const b = c.createBiquadFilter(); b.type = type; b.frequency.value = f; b.gain.value = gain; if(q) b.Q.value = q; return b; };
+  // Mix bus: a little low-end weight, less boxiness, a touch of air
+  g.master = c.createGain(); g.out = c.createGain();
+  const lowShelf = eq('lowshelf', 90, 1.5), mud = eq('peaking', 320, -1.5, 0.9), highShelf = eq('highshelf', 11000, 1.5);
+  g.master.connect(lowShelf); lowShelf.connect(mud); mud.connect(highShelf); highShelf.connect(g.out);
+  // Drum bus: parallel compression for punch, then gentle tape-style saturation
+  g.drumBus = c.createGain();
+  const dsum = c.createGain(), dcomp = c.createDynamicsCompressor(), wet = c.createGain(), dsat = c.createWaveShaper(), makeup = c.createGain();
+  dcomp.threshold.value = -28; dcomp.ratio.value = 6; dcomp.attack.value = 0.003; dcomp.release.value = 0.12;
+  wet.gain.value = 0.55; dsum.gain.value = 0.75; dsat.curve = curve(1.4); dsat.oversample = '2x'; makeup.gain.value = 1.25;
+  g.drumBus.connect(dsum); g.drumBus.connect(dcomp); dcomp.connect(wet); wet.connect(dsum);
+  dsum.connect(dsat); dsat.connect(makeup); makeup.connect(g.master);
+  // Synth bus: filters for section sweeps, air, then stereo widening (side boosted, mid kept)
   g.bus = c.createGain(); g.busHP = filter('highpass', 20, 0.7); g.busLP = filter('lowpass', 20000, 0.9);
-  const air = c.createBiquadFilter(); air.type = 'highshelf'; air.frequency.value = 9000; air.gain.value = 2.5;
-  g.bus.connect(g.busHP); g.busHP.connect(g.busLP); g.busLP.connect(air); air.connect(g.master);
+  const air = eq('highshelf', 9000, 2.5);
+  g.bus.connect(g.busHP); g.busHP.connect(g.busLP); g.busLP.connect(air);
+  const w = 0.3, split = c.createChannelSplitter(2), merge = c.createChannelMerger(2);
+  const lin = (gv) => { const x = c.createGain(); x.gain.value = gv; return x; };
+  const ll = lin(1 + w/2), lr = lin(-w/2), rr = lin(1 + w/2), rl = lin(-w/2);
+  air.connect(split);
+  split.connect(ll, 0); split.connect(lr, 1); split.connect(rr, 1); split.connect(rl, 0);
+  ll.connect(merge, 0, 0); lr.connect(merge, 0, 0); rr.connect(merge, 0, 1); rl.connect(merge, 0, 1);
+  merge.connect(g.master);
   // stereo chorus: two slowly modulated short delays, one per side
   g.choIn = c.createGain();
   [[0.013, 0.23, -1], [0.019, 0.31, 1]].forEach(([dt, rate, side]) => {
@@ -37,11 +56,11 @@ function makeGraph(c, offline){
   const pl = pan(-0.8), pr = pan(0.8);
   g.delL.connect(pl); g.delR.connect(pr); pl.connect(out); pr.connect(out); out.connect(g.bus);
   g.delL.delayTime.value = g.delR.delayTime.value = stepDur()*3;
-  if(offline) g.master.connect(c.destination);
+  if(offline) g.out.connect(c.destination);
   ctx = prev;
   return g;
 }
-function useGraph(g){ ({ctx, master, bus, busLP, busHP, conv, revIn, delIn, delL, delR, fb: delFb, choIn} = g); }
+function useGraph(g){ ({ctx, master, bus, busLP, busHP, conv, revIn, delIn, delL, delR, fb: delFb, choIn, drumBus} = g); }
 function ensureAudio(){
   if(!ctx){
     try{ if(navigator.audioSession) navigator.audioSession.type = 'playback'; }catch(e){}
@@ -56,9 +75,11 @@ function ensureAudio(){
     glue.threshold.value = -14; glue.ratio.value = 3; glue.attack.value = 0.01; glue.release.value = 0.15;
     const limit = ctx.createDynamicsCompressor();
     limit.threshold.value = -3; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.08;
-    liveGraph.master.gain.value = state.master;
-    const trim = ctx.createGain(); trim.gain.value = 0.4;  // headroom so the glue and limiter work gently
-    liveGraph.master.connect(trim); trim.connect(glue); glue.connect(limit); limit.connect(ctx.destination);
+    // Output stage: volume, headroom, a soft clipper for density, glue compression, limiter
+    liveOut = ctx.createGain(); liveOut.gain.value = state.master;
+    const trim = ctx.createGain(); trim.gain.value = 0.45;
+    const clip = ctx.createWaveShaper(); clip.curve = curve(1.15); clip.oversample = '4x';
+    liveGraph.out.connect(liveOut); liveOut.connect(trim); trim.connect(clip); clip.connect(glue); glue.connect(limit); limit.connect(ctx.destination);
     useGraph(liveGraph);
     loadSamples(); decodeAllUser().then(() => typeof paintSlots === 'function' && paintSlots());
   }
@@ -84,11 +105,16 @@ function sends(node, rev, del, cho){
   if(rev){ const g = ctx.createGain(); g.gain.value = rev; node.connect(g); g.connect(revIn); }
   if(del){ const g = ctx.createGain(); g.gain.value = del; node.connect(g); g.connect(delIn); }
 }
+function keyKickTune(){
+  if(!state.song || !state.song.scale) return 1;
+  const f = 440*Math.pow(2, (24 + ((keyOff(state.song) % 12) + 12) % 12 - 69)/12);
+  return (Math.abs(f*2 - 50) < Math.abs(f - 50) ? f*2 : f)/46;
+}
 function envGain(t, peak, dur){
   const g = ctx.createGain();
   g.gain.setValueAtTime(Math.max(peak,0.0002), t);
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-  g.connect(master);
+  g.connect(drumBus || master);
   return g;
 }
 function noise(t, dur){
@@ -104,7 +130,8 @@ function metal(t, dur, v, hp, base = 40){
 }
 const VOICES = {
   kick(t,v,big){
-    const K = kitOf(), kt = K.kick, kd = K.decay;
+    // the kick's body is tuned to the song's key, so it sits with the bass instead of against it
+    const K = kitOf(), kd = K.decay, kt = keyKickTune()*Math.sqrt(K.kick);
     const o = ctx.createOscillator();
     o.frequency.setValueAtTime((big ? 320 : 260)*kt, t);
     o.frequency.exponentialRampToValueAtTime((big ? 52 : 56)*kt, t+0.055);
@@ -112,7 +139,7 @@ const VOICES = {
     const ws = ctx.createWaveShaper(); ws.curve = curve(K.drive || (big ? 3 : 1.8));
     const g = ctx.createGain();
     g.gain.setValueAtTime(v*0.95, t); g.gain.setValueAtTime(v*0.95, t + (big ? 0.1 : 0.07)*kd); g.gain.exponentialRampToValueAtTime(0.0001, t + (big ? 0.75 : 0.5)*kd);
-    o.connect(ws); ws.connect(g); g.connect(master); o.start(t); o.stop(t + 0.9*kd + 0.1);
+    o.connect(ws); ws.connect(g); g.connect(drumBus || master); o.start(t); o.stop(t + 0.9*kd + 0.1);
     const c = ctx.createOscillator(); c.type = 'triangle';
     c.frequency.setValueAtTime(2400,t); c.frequency.exponentialRampToValueAtTime(400,t+0.012);
     c.connect(envGain(t, v*0.3, 0.015)); c.start(t); c.stop(t+0.03);
@@ -130,7 +157,7 @@ const VOICES = {
   clap(t,v){
     const hp = filter('highpass',900), bp = filter('bandpass',kitOf().clap,0.9);
     noise(t,0.4).connect(hp); hp.connect(bp);
-    const g = ctx.createGain(); g.connect(master); bp.connect(g); sends(g, 0.4);
+    const g = ctx.createGain(); g.connect(drumBus || master); bp.connect(g); sends(g, 0.4);
     for(let k=0;k<3;k++){ const s = t+k*0.011; g.gain.setValueAtTime(v*0.9,s); g.gain.exponentialRampToValueAtTime(v*0.12,s+0.009); }
     g.gain.setValueAtTime(v*0.9,t+0.033); g.gain.exponentialRampToValueAtTime(0.0001,t+0.3);
   },
@@ -147,7 +174,7 @@ const VOICES = {
   },
   shaker(t,v){
     const f = filter('bandpass',7000,1.2); noise(t,0.07).connect(f);
-    const g = ctx.createGain(); g.connect(master); f.connect(g);
+    const g = ctx.createGain(); g.connect(drumBus || master); f.connect(g);
     g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(v*0.35,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+0.065);
   },
   rim(t,v){
