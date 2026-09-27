@@ -88,14 +88,14 @@ function chordAt(song, item){
     const up = k => sc[(deg+k)%7] + (deg+k >= 7 ? 12 : 0) - root;
     ints = [0, up(2), up(4)];
     if(song.sus && (deg === 4 || deg === 6)) ints[1] = up(3);            // suspended chords where tension wants it
-    sev = up(6); nine = up(1) + 12;
+    sev = up(6); nine = up(1) === 2 ? 14 : null;   // an added ninth must be a whole step up; a flat nine (phrygian, iii, vii) is left off
   } else {                                                                 // coloured: borrowed, secondary or harmonic-minor chords
     root = it.r; ints = QUALITIES[it.q].slice();
     sev = it.q === 'M' ? (it.f === 'D' || it.f === 'SD' ? 10 : 11) : 10; nine = 14;
   }
   const h = song.harmony;
-  const ext = h === 'seventh' ? [...ints, sev] : h === 'add9' ? [...ints, nine]
-            : h === 'mixed' ? (deg % 2 ? [...ints, sev] : [...ints, nine]) : ints.slice();
+  const add = x => x === null ? ints.slice() : [...ints, x];
+  const ext = h === 'seventh' ? add(sev) : h === 'add9' ? add(nine) : h === 'mixed' ? (deg % 2 ? add(sev) : add(nine)) : ints.slice();
   return {T: norm(song.key + root), ints, ext, bass: it.b || 0};
 }
 function makeRiff(){ return pick(BASS_RHYTHMS).map((st,i) => [i === 0 ? 'r' : pick(['r','r','o','o','5','3']), st]); }

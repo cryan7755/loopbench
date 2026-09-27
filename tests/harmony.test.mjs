@@ -70,3 +70,10 @@ test('melody notes on strong beats belong to the chord, including colour chords'
   }
   assert.ok(fit / checked > 0.95, `only ${(100 * fit / checked).toFixed(1)}% of strong-beat hook notes fit the chord`);
 });
+
+test('chord extensions never add a flat ninth', () => {
+  for (const s of songs) for (const p of all(s)) for (const it of p) {
+    const pcs = app.chordPcsOf(s, it), root = app.itemRoot(s, it);
+    assert.ok(!pcs.includes((root + 1) % 12), `${app.songCode(s)}: a chord on ${app.itemKey(it)} contains a flat ninth`);
+  }
+});

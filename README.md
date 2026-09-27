@@ -11,6 +11,8 @@ Everything runs in the browser. The built app is a single self-contained HTML fi
 - **Full song forms:** classic, cold open, extended mix, fake-out drop, radio edit, with section lengths chosen per song from its tempo and phrase length, so no two songs share the same structure
 - **Composed, not just randomised:** each section has its own progression with a harmonic job (the verse settles, the pre-chorus ends on a dominant that resolves into the chorus, the bridge contrasts), built from harmonic function and coloured per genre with borrowed chords, secondary dominants, the harmonic-minor V and bass-smoothing inversions, then voice-led so chords glide; hooks and vocal lines are written as sentences or question-and-answer periods, generated dozens of times and ranked by rules from music-cognition research (chord tones on strong beats, resolved leaps, a single well-placed peak, a firm cadence, a middle amount of predictability)
 - **One motif through the song:** the hook's opening figure is the song's motif; the chorus vocal sings and sequences it, the verse fragments and inverts it lower down and ends open, the pre-chorus climbs by sequencing it upward, and the chorus holds the song's highest sung note; vocals lean on strong beats with appoggiaturas that resolve by step
+- **Melodic bass lines:** the bass steps into chord changes with approach notes and chooses octaves that move against the melody, avoiding parallel octaves and fifths (genres built on a held bass keep it)
+- **A song critic:** every song can be scored out of 100 across six areas (the Song report button, or `npm run critic` for a report across genres)
 - **A planned energy arc:** each bar's intensity is measured and its texture (hi-hats, shaker, open hats, counter melody, filter, guitar level) shaped toward a curve: intro rising, verses moderate, builds climbing, breakdowns dipping, the final drop as the peak, the outro fading
 - **Arranged as an ensemble:** one foreground melody at a time (the lead answers in the singer's gaps; in EDM drops the voice doubles the hook), supporting lines kept above the melody and away from its new notes, and no semitone clashes between lines
 - **Per-song variety:** sound design, chord language (7ths, add9, sus), melody style, build recipe, drum kit, delay timing and trance gates all vary per song
@@ -34,7 +36,8 @@ npm run build    # writes dist/loopbench.html
 Open `dist/loopbench.html` in Chrome or Edge. While working on the code, `npm run watch` rebuilds on every save; refresh the browser to see changes.
 
 ```sh
-npm test         # generation, composition rules, song codes, exports and offline audio rendering (~45 s)
+npm test         # generation, composition, harmony, arrangement, energy, critic, exports and audio (~2 min)
+npm run critic   # score generated songs in every genre (add a number for songs per genre, or genre names)
 ```
 
 ## How the code is organised
@@ -62,6 +65,8 @@ The app is plain JavaScript with no framework. `scripts/build.mjs` joins the fil
 | `src/17-editor.js` | Song editor: piano roll, per-bar edits applied on top of the generated song, undo |
 | `src/18-ensemble.js` | Ensemble arranger: one foreground melody, separate registers, no semitone rubs; plus the audit used by the tests |
 | `src/19-energy.js` | Energy arc: measures each bar's intensity and shapes texture toward a target curve per section |
+| `src/20-bassline.js` | Bass lines and counterpoint: approach notes into chord changes, contrary motion against the melody |
+| `src/21-critic.js` | The critic: scores a whole song for melody, harmony, ensemble, counterpoint, energy and structure |
 | `assets/samples/<instrument>/<midi-note>.mp3` | Instrument samples |
 | `assets/vocals/<bank>/<midi-note>.wav` | Vocal samples; loop points in `loops.json` |
 | `tests/` | Test suite (`node --test`) |
