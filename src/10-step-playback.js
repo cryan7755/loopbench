@@ -68,12 +68,12 @@ function playStep(p, s, tt){
   if(p.wall && s === 0 && audible('wall')){
     const w = p.wall, wp = remapPatch('wall', 'wall', p);
     const top = w.ext && w.ext[3] !== undefined ? [60+w.T+w.ext[3]] : [];
-    (w.voiced ? [48+w.T, ...w.voiced] : [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T, ...top]).forEach(m => synth(m, tt, w.len*stepDur(), wp, state.mix.wall.vol*(wp === 'wall' ? 1 : 0.8), {bright: w.bright}));
+    (w.voiced ? [48+w.T+(w.bass||0), ...w.voiced] : [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T, ...top]).forEach(m => synth(m, tt, w.len*stepDur(), wp, state.mix.wall.vol*(wp === 'wall' ? 1 : 0.8), {bright: w.bright}));
     if(samplesReady && (state.palette || 'hybrid') !== 'electronic' && (p.phase === 'breakdown' || p.label === 'Final drop' || (state.palette === 'orchestral' && p.phase === 'drop')))
       (w.voiced || [60+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2]]).forEach(m => synth(m, tt, w.len*stepDur(), 'choir', state.mix.wall.vol));
     // real strings under the supersaws in builds and drops, the classic epic-trance layer
     if(samplesReady && (state.palette || 'hybrid') !== 'electronic' && wp === 'wall' && (p.phase === 'drop' || p.phase === 'build'))
-      (w.voiced ? [48+w.T, ...w.voiced] : [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T]).forEach(m => synth(m, tt, w.len*stepDur(), 'strings', state.mix.wall.vol*0.6));
+      (w.voiced ? [48+w.T+(w.bass||0), ...w.voiced] : [48+w.T, 60+w.T+w.ints[1], 60+w.T+w.ints[2], 72+w.T]).forEach(m => synth(m, tt, w.len*stepDur(), 'strings', state.mix.wall.vol*0.6));
   }
   if(p.counter && audible('counter')) p.counter.forEach(([r,st]) => { if(st === s) synth(72 + p.counterT + r, tt, stepDur()*2, remapPatch((state.song && state.song.dna && state.song.dna.counter) || 'bell', 'counter', p), state.mix.counter.vol); });
   if(p.gate && p.gate.pattern[s] && audible('wall')) (p.gate.voiced || (p.gate.ext || p.gate.ints).map(r => 60 + p.gate.T + r)).forEach(m => synth(m, tt, stepDur()*0.8, remapPatch('saws', 'gate', p), state.mix.wall.vol*0.45));

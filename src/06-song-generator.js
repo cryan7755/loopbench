@@ -80,15 +80,23 @@ const HOOK_RHYTHMS = [[0,2,3,6,8,10,11,14],[0,3,6,8,11,14],[0,2,4,6,8,11,12,14],
 const ARP_SHAPES = [[0,1,2,3],[0,1,2,3,2,1],[0,2,1,3],[3,2,1,0],[0,3,2,1]];
 const norm = x => { x = ((x%12)+12)%12; return x > 6 ? x-12 : x; };
 const clampDeg = g => Math.max(0, Math.min(7, g));
-function chordAt(song, deg){
-  const sc = SCALES[song.scale], root = sc[deg];
-  const up = k => sc[(deg+k)%7] + (deg+k >= 7 ? 12 : 0) - root;
-  const ints = [0, up(2), up(4)];
-  if(song.sus && (deg === 4 || deg === 6)) ints[1] = up(3);            // suspended chords where tension wants it
+function chordAt(song, item){
+  const sc = SCALES[song.scale], it = typeof item === 'number' ? {d: item} : item, deg = wrap7(it.d);
+  let root, ints, sev, nine;
+  if(it.r === undefined){                                                  // diatonic: built from the scale
+    root = sc[deg];
+    const up = k => sc[(deg+k)%7] + (deg+k >= 7 ? 12 : 0) - root;
+    ints = [0, up(2), up(4)];
+    if(song.sus && (deg === 4 || deg === 6)) ints[1] = up(3);            // suspended chords where tension wants it
+    sev = up(6); nine = up(1) + 12;
+  } else {                                                                 // coloured: borrowed, secondary or harmonic-minor chords
+    root = it.r; ints = QUALITIES[it.q].slice();
+    sev = it.q === 'M' ? (it.f === 'D' || it.f === 'SD' ? 10 : 11) : 10; nine = 14;
+  }
   const h = song.harmony;
-  const ext = h === 'seventh' ? [...ints, up(6)] : h === 'add9' ? [...ints, up(1) + 12]
-            : h === 'mixed' ? (deg % 2 ? [...ints, up(6)] : [...ints, up(1) + 12]) : ints.slice();
-  return {T: norm(song.key + root), ints, ext};
+  const ext = h === 'seventh' ? [...ints, sev] : h === 'add9' ? [...ints, nine]
+            : h === 'mixed' ? (deg % 2 ? [...ints, sev] : [...ints, nine]) : ints.slice();
+  return {T: norm(song.key + root), ints, ext, bass: it.b || 0};
 }
 function makeRiff(){ return pick(BASS_RHYTHMS).map((st,i) => [i === 0 ? 'r' : pick(['r','r','o','o','5','3']), st]); }
 function makeHook(){
@@ -145,13 +153,14 @@ function makeVocal(max = 4){
 }
 function vocalBar(song, i, T, ints, octaveUp = 0, V = null, prog = null){
   V = V || song.vocal;
-  const sc = SCALES[song.scale], bar = i % V.bars, root = prog ? rootAtBar(song, prog, i) : null, K = keyOff(song);
+  const sc = SCALES[song.scale], bar = i % V.bars, K = keyOff(song);
+  const root = rootAtBar(song, prog || song[V.progName || 'prog'] || song.prog, i);
   const out = []; let prev = null;
   V.notes.forEach((n, k) => {
     if(n.bar !== bar) return;
     let deg = n.deg;
-    if(root !== null && (n.s % 4 === 0 || n.dur >= 3) && !isChordTone(song, deg, root)) deg = nearestChordTone(song, deg, root);
-    const m = 60 + K + scaleNote(sc, deg) + octaveUp;
+    if((n.s % 4 === 0 || n.dur >= 3) && !isChordTone(song, deg, root)) deg = nearestChordTone(song, deg, root);
+    const m = 60 + K + alterToChord(song, scaleNote(sc, deg), root) + octaveUp;
     out.push({s: n.s, len: n.dur, m, vw: V.vowels[k], from: prev}); prev = m;
   });
   return out;
@@ -232,8 +241,13 @@ function makeSong(style, seed, parts){
     const b = STYLES[style].bpm;
     const song = {style, seed, parts, bpm: b[0] + Math.floor(rnd()*(b[1]-b[0]+1)), key: Math.floor(rnd()*12),
       scale: pick(STYLES[style].scales || ['minor','minor','dorian','major']), title: pick(WORDS1) + ' ' + pick(WORDS2)};
-    R('chords'); song.v = COMPOSER_VERSION; song.prog = makeProgression(song.scale);
-    Object.assign(song, {bdProg: makeProgression(song.scale, {start: [5, 3, 5, 0], avoid: song.prog}), stab: pick([[2,6,10,14],[0,3,6,10,12],[3,11],[0,6,12],[2,5,10,13]]),
+    R('chords'); song.v = COMPOSER_VERSION;
+    // each section has its own harmonic job: the chorus resolves, the pre-chorus builds tension into it,
+    // the verse settles, and the breakdown or bridge brings contrast
+    song.prog = makeProgression(song, 'chorus');
+    song.preProg = makeProgression(song, 'pre', {next: song.prog[0]});
+    song.verseProg = makeProgression(song, 'verse', {next: song.preProg[0], avoid: song.prog});
+    Object.assign(song, {bdProg: makeProgression(song, 'bridge', {avoid: song.prog}), stab: pick([[2,6,10,14],[0,3,6,10,12],[3,11],[0,6,12],[2,5,10,13]]),
       harmony: pick(['triad','triad','seventh','add9','mixed']), sus: chance(0.35), chordBars: pick([1,1,2])});
     if(STYLES[style].harmony && chance(0.75)) song.harmony = STYLES[style].harmony;
     R('hook');   song.melody = pick(MELODY_STYLES);

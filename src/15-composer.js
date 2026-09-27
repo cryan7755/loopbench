@@ -8,18 +8,20 @@
    and a middle amount of predictability). The best-scoring version is kept. */
 
 // Degree offsets (from the chord root) that belong to the chord, matching chordAt()
-function chordDegrees(song, root){
-  const third = song.sus && (root === 4 || root === 6) ? 3 : 2, out = [0, third, 4], h = song.harmony;
-  if(h === 'seventh' || (h === 'mixed' && root % 2)) out.push(6);
-  if(h === 'add9' || (h === 'mixed' && !(root % 2))) out.push(1);
-  return out;
+// Is scale degree deg a note of this chord? Checked by pitch, so borrowed and secondary chords work too
+function isChordTone(song, deg, chord){ return chordPcsOf(song, chord).includes(SCALES[song.scale][wrap7(deg)]); }
+// A scale note a semitone away from one of the chord's altered notes takes the chord's version (e.g. the raised leading tone)
+function alterToChord(song, rel, chord){
+  const pcs = chordPcsOf(song, chord), sc = SCALES[song.scale], pc = ((rel % 12) + 12) % 12;
+  if(pcs.includes(pc)) return rel;
+  for(const d of [1, -1]){ const q = (pc + d + 12) % 12; if(pcs.includes(q) && !sc.includes(q)) return rel + d; }
+  return rel;
 }
-const isChordTone = (song, deg, root) => chordDegrees(song, root).includes(wrap7(deg - root));
 function nearestChordTone(song, deg, root, lo = -99, hi = 99){
   for(let d=0; d<7; d++) for(const c of [deg - d, deg + d]) if(c >= lo && c <= hi && isChordTone(song, c, root)) return c;
   return deg;
 }
-const rootAtBar = (song, prog, bar) => prog[Math.floor(bar / (song.chordBars || 1)) % prog.length];
+function rootAtBar(song, prog, bar){ return prog[Math.floor(bar / (song.chordBars || 1)) % prog.length]; }
 
 const cellFrom = (onsets, maxLen = 4) => onsets.map((s, k) => [s, Math.max(1, Math.min(maxLen, (k + 1 < onsets.length ? onsets[k+1] : 16) - s))]);
 const HOOK_CADENCES = [[[0,2],[3,3],[6,2],[8,8]], [[0,3],[3,3],[6,10]], [[0,2],[2,2],[4,4],[8,8]], [[0,3],[3,3],[6,2],[8,4],[12,4]]];
@@ -48,7 +50,7 @@ function writeLine(song, o){
       if(b === 0) unitStart[u] = notes.length;
       if(copyFrom >= 0){
         // repeat the opening idea: moved by the chord change in a sentence, exact in a period
-        let shift = form === 'sentence' ? wrap7(root - prog[0]) : 0; if(shift > 3) shift -= 7;
+        let shift = form === 'sentence' ? wrap7(itemDeg(root) - itemDeg(prog[0])) : 0; if(shift > 3) shift -= 7;
         const src = notes.slice(unitStart[0], unitStart[1]).filter(n => n.bar === 0);
         for(const n of src){
           let deg = Math.max(o.lo, Math.min(o.hi, n.deg + shift));
@@ -146,24 +148,24 @@ function hookOptions(song){
 }
 function vocalOptions(song, part){
   const cell = pick(VOCAL_CELLS);   // one rhythm per vocal line, like a sung melody's repeating phrase
-  return {prog: song.prog, cells: [cell], cadences: VOCAL_CADENCES, lo: part === 'verse' ? -3 : 1, hi: part === 'verse' ? 3 : 8,
+  return {prog: part === 'verse' ? song.verseProg || song.prog : song.prog, cells: [cell], cadences: VOCAL_CADENCES, lo: part === 'verse' ? -3 : 1, hi: part === 'verse' ? 3 : 8,
     start: part === 'verse' ? [0, 2] : [2, 4], centre: part === 'verse' ? 0 : 4.5, maxLeap: 4, maxSpan: part === 'verse' ? 9 : 12, stepTarget: 0.7, predictTarget: 0.45, repeat: 1.5};
 }
 function composeHook(song){ return Object.assign(composeBest(song, hookOptions(song)), {v: COMPOSER_VERSION, style: song.melody}); }
 function composeVocal(song, part){
   const line = composeBest(song, vocalOptions(song, part));
   line.vowels = line.notes.map(n => n.dur >= 6 ? pick(VOWEL_WORDS.filter(w => w.length > 1)) : pick(VOWEL_WORDS));
-  return Object.assign(line, {v: COMPOSER_VERSION, part});
+  return Object.assign(line, {v: COMPOSER_VERSION, part, progName: part === 'verse' && song.verseProg ? 'verseProg' : 'prog'});
 }
 
 // The hook's notes for one bar: [row relative to the key, step, length in steps].
 // Played over a different progression (breakdowns, bridges), strong notes are moved onto that chord.
 function hookBar(song, i, prog){
   const H = song.dropHook, sc = SCALES[song.scale], bar = i % H.bars;
-  const root = prog ? rootAtBar(song, prog, i) : null;
+  const root = rootAtBar(song, prog || song.prog, i);
   return H.notes.filter(n => n.bar === bar).map(n => {
     let deg = n.deg;
-    if(root !== null && (n.s % 4 === 0 || n.dur >= 3) && !isChordTone(song, deg, root)) deg = nearestChordTone(song, deg, root);
-    return [scaleNote(sc, deg), n.s, n.dur];
+    if((n.s % 4 === 0 || n.dur >= 3) && !isChordTone(song, deg, root)) deg = nearestChordTone(song, deg, root);
+    return [alterToChord(song, scaleNote(sc, deg), root), n.s, n.dur];
   });
 }

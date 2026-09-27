@@ -1,6 +1,6 @@
 // Version of the song-writing rules; part of every song code. Defined first because the
 // interface uses it while loading, before the later source files have run.
-const COMPOSER_VERSION = 4;
+const COMPOSER_VERSION = 5;
 // The song editor's state; declared here so the interface can safely check it while loading
 let edState = null;
 // The ensemble arranger (src/18-ensemble.js); switchable so its effect can be compared

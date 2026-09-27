@@ -10,11 +10,11 @@ const grooveIdx = (i, n = 16) => i === n - 1 ? 7 : i < 7 ? i : 4 + ((i - 7) % 3)
 // stretch or squeeze an 8-step recipe (0-7) across n bars, always ending on its final step
 const scale8 = (i, n) => i === n - 1 ? 7 : Math.min(6, Math.floor(i*7/Math.max(1, n - 1)));
 function breakdownBar(song, i, bars, second){
-  const {T, ints, ext, voiced} = chordAtPos(song, i, song.bdProg);
+  const {T, ints, ext, voiced, bass} = chordAtPos(song, i, song.bdProg);
   const stage = second ? 2 + Math.min(1, Math.floor(i*2/bars)) : Math.min(3, Math.floor(i*4/bars));
   const p = buildPattern(i === 0 ? {crash:[0]} : {}, []);
-  const x = {sub:false, wall:{T, ints, ext, voiced, len:16, bright: 0.7 + stage*0.15}, busFilter:{lp:[20000,20000], hp:[70,70]},
-    chords:{steps:[0], len:16, T, ints, ext, voiced, patch:'pad'}, counter: counterLine(song, ints, [], stage >= 2 ? 3 : 2), counterT:T};
+  const x = {sub:false, wall:{T, ints, ext, voiced, bass, len:16, bright: 0.7 + stage*0.15}, busFilter:{lp:[20000,20000], hp:[70,70]},
+    chords:{steps:[0], len:16, T, ints, ext, voiced, bass, patch:'pad'}, counter: counterLine(song, ints, [], stage >= 2 ? 3 : 2), counterT:T};
   if(i === 0){ x.impact = true; x.down = true; }
   x.lead = hookTease(song, i, stage >= 2 ? 1 : 2, song.bdProg);
   x.leadSynth = {wave:'pluck', bright: 0.6 + stage*0.15, octave:4, transpose:keyOff(song), len:0.7};
@@ -45,7 +45,7 @@ function barFor(base, loc, n){
       p = cycleBar(song, g, {bar: i, bars: sec.bars});
       Object.assign(p, {vocal:null, counter:null, chords:null, arp:null});
       p.busFilter = {lp:[700*Math.pow(1.2, g), 700*Math.pow(1.2, g + 1)], hp:[20,20]};
-      if(j >= n2/2){ p.lead = hookTease(song, i, 2); p.leadSynth = {wave:'pluck', bright:0.6, octave:4, transpose:keyOff(song), len:0.6}; }
+      if(j >= n2/2){ p.lead = hookTease(song, i, 2, song.verseProg); p.leadSynth = {wave:'pluck', bright:0.6, octave:4, transpose:keyOff(song), len:0.6}; }
     }
   } else if(sec.name === 'verse'){
     p = cycleBar(song, 32 + grooveIdx(i, sec.bars), {bar: i, bars: sec.bars});
@@ -54,18 +54,18 @@ function barFor(base, loc, n){
     p.busFilter = {lp:[3500 + i*300, 3800 + i*300], hp:[20,20]};
     // verses sit a notch below the drops so the drops feel bigger
     p.gain = {kick:0.75, clap:0.7, snare:0.7, chat:0.75, ohat:0.7, crash:0.8};
-    p.vocal = i >= 2 ? vocalBar(song, i, p.wall.T, p.wall.ints, 0, song.verseVocal) : null;
+    p.vocal = i >= 2 ? vocalBar(song, i, p.wall.T, p.wall.ints, 0, song.verseVocal, song.verseProg) : null;
     if(i < 8) p.counter = null;
   } else if(sec.name === 'breakdown'){
     p = breakdownBar(song, i, sec.bars, sec.second);
   } else if(sec.name === 'bridge'){
     // half-time bridge: space and a new feel before the last build
-    const {T, ints, ext, voiced} = chordAtPos(song, i, song.bdProg);
+    const {T, ints, ext, voiced, bass} = chordAtPos(song, i, song.bdProg);
     const d = {kick:[0,10], snare:[8], chat:[0,4,8,12], shaker: i >= 8 ? [2,6,10,14] : []};
     if(i === 0) d.crash = [0];
     if(i === sec.bars - 1){ d.snare = [8,12,13,14,15]; d.tom = [14,15]; }
     p = Object.assign(buildPattern(d, [[0,0],[0,10]]), {synth:{wave:'reese', bright:0.7, octave:2, transpose:T, len:6}, sub:true,
-      wall:{T, ints, ext, voiced, len:16, bright:0.8}, vocal: vocalBar(song, i, T, ints, 0, song.verseVocal, song.bdProg), counter: counterLine(song, ints, [], 2), counterT:T,
+      wall:{T, ints, ext, voiced, bass, len:16, bright:0.8}, vocal: vocalBar(song, i, T, ints, 0, song.verseVocal, song.bdProg), counter: counterLine(song, ints, [], 2), counterT:T,
       busFilter:{lp:[5000,5000], hp:[20,20]}, gain:{kick:0.8, snare:0.85}, down: i === 0});
   } else if(sec.name === 'fake'){
     // fake-out: the drop starts... and cuts after two beats, then a quick re-build
@@ -104,8 +104,8 @@ function barFor(base, loc, n){
     if(last){
       DRUMS.forEach((d,r) => { p.drums[r] = Array(STEPS).fill(false); });
       setDrum(p, 'kick', [0]); setDrum(p, 'crash', [0]);
-      const {T, ints, ext, voiced} = chordAtPos(song, 0);
-      p.wall = {T, ints, ext, voiced, len:24, bright:0.8};
+      const {T, ints, ext, voiced, bass} = chordAtPos(song, 0, [0], 0);   // end on the home chord
+      p.wall = {T, ints, ext, voiced, bass, len:24, bright:0.8};
     }
   }
   if(STYLES[song.style].band) bandBar(song, p, sec, loc.i);
