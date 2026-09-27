@@ -66,6 +66,7 @@ for(let r=ROWS-1;r>=0;r--){
 }
 
 const LAYER_PREVIEW = {
+  gtr:    t => { guitarHit([40, 47, 52], t, 0.9, 'dist', state.mix.gtr.vol); guitarHit([43, 50, 55], t + 0.9, 0.9, 'dist', state.mix.gtr.vol); },
   lead:   t => playNote(7, t, state.mix.lead.vol, {wave:'lead', octave:4, len:3}),
   chords: t => playChord(0, t, 3, state.mix.chords.vol, MINOR, 'saws'),
   arp:    t => [0,3,7,12].forEach((r,i) => playArp(r, 0, t + i*stepDur(), state.mix.arp.vol)),

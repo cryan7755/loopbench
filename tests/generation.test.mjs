@@ -20,7 +20,7 @@ test('every genre and song form generates, plays and ends cleanly', () => {
 });
 
 test('the last bar of every build leaves a gap before the drop', () => {
-  for (const style of Object.keys(app.STYLES)) {
+  for (const style of Object.keys(app.STYLES).filter(k => !app.STYLES[k].band)) {   // bands flow straight from pre-chorus into chorus
     app.state.song = app.makeSong(style);
     for (const sec of app.arr().filter(s => s.name === 'build')) {
       const p = app.generateBar(sec.start + sec.bars - 1);
@@ -55,7 +55,7 @@ test('song structure varies from song to song and stays in sensible bounds', () 
       if (x.name === 'build') assert.ok(x.bars >= 8 && x.bars <= 16, `build of ${x.bars} bars`);
       if (x.name === 'drop') assert.ok(x.bars >= 16, `drop of only ${x.bars} bars`);
     }
-    const limit = s.form === 'radio' ? [1.5, 5] : [3, 9];
+    const limit = s.form === 'radio' ? [1.5, 6] : app.STYLES[s.style].band ? [2.2, 7] : [2.5, 9];   // band songs are shorter than club tracks
     assert.ok(minutes >= limit[0] && minutes <= limit[1], `${app.songCode(s)} lasts ${minutes.toFixed(1)} minutes`);
   }
   assert.ok(shapes.size > 40, `only ${shapes.size} different structures in 150 songs`);

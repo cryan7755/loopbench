@@ -39,7 +39,8 @@ export function sampleSource() {
   return [
     '/* Recorded instruments: string sections, solo violin, contrabass, harp and orchestral percussion from the',
     '   Versilian Studios Chamber Orchestra 2 CE; grand piano, hand claps, hi-hats, snare and shaker from the',
-    '   Versilian Community Sample Library. Both public domain (CC0). See LICENSES/. */',
+    '   Versilian Community Sample Library; electric guitar from Karoryfer Black and Green Guitars; acoustic',
+    '   drum kit from Virtuosity Drums. All public domain (CC0). See LICENSES/. */',
     'const SAMPLE_DATA = ' + JSON.stringify(samples) + ';',
     '/* Sung vowels: Concert Choir and Voice Oohs from GeneralUser GS v1.471 by S. Christian Collins. See LICENSES/. */',
     'const VOX_DATA = ' + JSON.stringify(vocals) + ';',
