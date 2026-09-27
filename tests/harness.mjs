@@ -8,11 +8,11 @@ const P = new Proxy(function () {}, {
   apply: () => P, construct: () => P, set: () => true,
 });
 
-export function loadApp({ offlineAudio } = {}) {
+export function loadApp({ offlineAudio, saved } = {}) {
   Object.assign(globalThis, {
     window: offlineAudio ? { OfflineAudioContext: offlineAudio } : {},
     document: { getElementById: () => P, createElement: () => P, querySelectorAll: () => [], addEventListener() {}, createTextNode: () => P },
-    localStorage: { getItem: () => null, setItem() {} },
+    localStorage: { getItem: () => (saved ? JSON.stringify(saved) : null), setItem() {} },
     requestAnimationFrame: () => {},
     Option: function () {},
   });
@@ -22,8 +22,8 @@ export function loadApp({ offlineAudio } = {}) {
   state, STYLES, FORMS, PART_KEYS, DRUMS, generateBar, makeSong, parseCode, songCode, arr, totalBars,
   playStep, renderBar, buildMidi, encodeWav, remapPatch, patchOf, stepDur, sampleBufs,
   SCALES, HARM_FUNC, COMPOSER_VERSION, makeProgression, progressionScore, voicingsFor, chordAtPos, keyOff,
-  hookBar, vocalBar, writeLine, scoreLine, composeBest, hookOptions, vocalOptions, isChordTone, scaleNote, rootAtBar, seedWith,
-  useMock(m) { ctx = master = bus = revIn = delIn = delL = delR = busLP = busHP = choIn = delFb = m; },
+  hookBar, vocalBar, makeArrangement, writeLine, scoreLine, composeBest, hookOptions, vocalOptions, isChordTone, scaleNote, rootAtBar, seedWith,
+  useMock(m) { ctx = master = bus = revIn = delIn = delL = delR = busLP = busHP = choIn = delFb = drumBus = liveOut = m; },
   async useOfflineAudio(C) {
     const c = new C(2, 44100, 44100); ctx = c;
     noiseBuf = c.createBuffer(1, 44100, 44100);

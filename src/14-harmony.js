@@ -7,7 +7,6 @@
    return home and shared notes between neighbours, and the best of many is kept.
    Voicings are then chosen so each chord moves as little as possible from the last. */
 
-const COMPOSER_VERSION = 4;
 const HARM_FUNC = {0:'T', 2:'T', 5:'T', 1:'PD', 3:'PD', 4:'D', 6:'D'};
 // Which chord tends to follow which (scale degrees 0-6), weighted
 const CHORD_MOVES = {
