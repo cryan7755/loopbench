@@ -105,15 +105,23 @@ $('code').onkeydown = e => { if(e.key === 'Enter') $('loadCode').click(); };
 $('fav').onclick = () => {
   const sg = state.song; if(!sg || !sg.seed){ msg('Press New song first.'); return; }
   const code = songCode(sg); state.favorites = state.favorites || [];
-  if(!state.favorites.some(f => f.code === code)) state.favorites.push({code, title: sg.title});
-  paint(); save(); msg('Saved “' + sg.title + '” to favorites.');
+  const edits = hasEdits(sg) ? JSON.parse(JSON.stringify(sg.edits)) : undefined;
+  const old = state.favorites.find(f => f.code === code);
+  if(old) old.edits = edits; else state.favorites.push({code, title: sg.title, edits});
+  paint(); save(); msg('Saved “' + sg.title + '” to favorites' + (edits ? ', with your edits.' : '.'));
 };
-$('favs').onchange = e => { const song = parseCode(e.target.value); e.target.value = ''; if(song){ useSong(song, false); msg('Loaded “' + song.title + '”.'); } };
+$('favs').onchange = e => {
+  const fav = (state.favorites || []).find(f => f.code === e.target.value), song = parseCode(e.target.value); e.target.value = '';
+  if(!song) return;
+  if(fav && fav.edits) song.edits = JSON.parse(JSON.stringify(fav.edits));
+  useSong(song, false); msg('Loaded “' + song.title + '”' + (song.edits ? ', with your edits.' : '.'));
+};
 document.querySelectorAll('[data-reroll]').forEach(b => b.onclick = () => {
   const sg = state.song; if(!sg){ msg('Press New song first.'); return; }
   const part = b.dataset.reroll, parts = Object.assign({}, sg.parts); parts[part] = (parts[part] || 0) + 1;
+  const hadEdits = hasEdits(sg);
   useSong(makeSong(sg.style, sg.seed, parts), true);
-  msg('New ' + b.textContent.replace(/^New /, '') + ' for “' + sg.title + '”. Everything else stays the same.');
+  msg('New ' + b.textContent.replace(/^New /, '') + ' for “' + sg.title + '”. Everything else stays the same.' + (hadEdits ? ' Your note edits were cleared, since they belonged to the previous version.' : ''));
 });
 const fileBase = () => (state.song ? state.song.title.replace(/[^A-Za-z0-9 ]/g, '').trim().replace(/ +/g, '-') : 'loopbench') + '-' + (state.song ? songCode(state.song) : '');
 $('exportMidi').onclick = async () => {

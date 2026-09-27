@@ -89,6 +89,7 @@ const patBtns = ['A','B','C','D'].map((name,i) => {
 
 let shown = -1;
 function showPlayhead(s){
+  edPlayhead(s);
   if(shown >= 0) cols[shown].forEach(c => c.classList.remove('now'));
   shown = s;
   if(s >= 0) cols[s].forEach(c => c.classList.add('now'));
@@ -130,4 +131,5 @@ function paint(){
   if(sel.options.length !== favs.length + 1){
     sel.replaceChildren(new Option('Favorites…', ''), ...favs.map(f => new Option(f.title + ' (' + f.code + ')', f.code)));
   }
+  edRefresh();
 }

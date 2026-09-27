@@ -14,6 +14,7 @@ Everything runs in the browser. The built app is a single self-contained HTML fi
 - **Sound palettes:** hybrid, orchestral (no synths) or all synth; recorded string sections, solo violin, cellos, contrabass, harp, grand piano, choir and orchestral percussion; recorded sung vocals
 - **Mix and master:** drum bus with parallel compression and saturation, key-tuned kicks, drum accents and groove, stereo widening, master EQ, soft clipping, glue compression and limiting
 - **Your own samples:** drop in kicks, claps, hats, lead/bass/pad notes or a vocal chop
+- **Edit generated songs:** a piano roll for the lead, vocal, bass and drums of any section, 4 bars at a time; edits are saved with the song, shown in orange, undoable, and included in playback, WAV and MIDI exports and favorites
 - **Song codes:** every song is reproducible from a short code like `trance-LGKB6R`; reroll just the hook, chords, bass, vocal, groove, sounds or structure
 - **Export:** WAV (rendered offline, normalised) and MIDI (one track per part, with section markers)
 - **Smooth playback:** bars are pre-rendered on background audio threads, so older CPUs play without dropouts
@@ -55,6 +56,7 @@ The app is plain JavaScript with no framework. `scripts/build.mjs` joins the fil
 | `src/14-harmony.js` | Functional chord progressions and voice-led chord voicings |
 | `src/15-composer.js` | Melody writing: phrase shapes, generate-and-rank, the melody critic |
 | `src/16-band.js` | Band genres: guitar amp simulation, guitar and bass parts, live drum arrangement |
+| `src/17-editor.js` | Song editor: piano roll, per-bar edits applied on top of the generated song, undo |
 | `assets/samples/<instrument>/<midi-note>.mp3` | Instrument samples |
 | `assets/vocals/<bank>/<midi-note>.wav` | Vocal samples; loop points in `loops.json` |
 | `tests/` | Test suite (`node --test`) |

@@ -69,6 +69,7 @@ function buildMidi(){
       });
       const S = p.synth || state.synth, bl = ((S.len || 0.9))*STEP;
       for(let r=0;r<ROWS;r++) if(p.notes[r][s]) add(T.bass, at, midiOf(r, S), bl);
+      if(p.bassAbs) p.bassAbs.forEach(([m, st, d]) => { if(st === s) add(T.bass, at, m, d*STEP); });
       [[p.lead, p.leadSynth], [p.lead2, p.lead2Synth]].forEach(([line, LS]) => { if(line && LS) line.forEach(([r,st,d]) => { if(st === s) add(T.lead, at, midiOf(r, LS), (d || LS.len || 0.9)*STEP); }); });
       if(p.arp) p.arp.forEach(([r,st]) => { if(st === s) add(T.arp, at, 72 + p.arpT + r, STEP*0.5, 80); });
       if(p.counter) p.counter.forEach(([r,st]) => { if(st === s) add(T.counter, at, 72 + p.counterT + r, STEP*2, 85); });

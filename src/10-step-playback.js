@@ -56,6 +56,7 @@ function playStep(p, s, tt){
   if(audible('synth')){
     const BS = p.phase && p.synth ? Object.assign({}, p.synth, {wave: remapPatch(patchOf(p.synth), 'bass', p)}) : (p.synth || state.synth);
     for(let r=0;r<ROWS;r++) if(p.notes[r][s]) playNote(r, tt, state.mix.synth.vol, BS);
+    if(p.bassAbs) p.bassAbs.forEach(([m, st, d]) => { if(st === s) playNote(m, tt, state.mix.synth.vol, Object.assign({}, BS, {octave: -1, transpose: 0, len: d})); });
   }
   const T = (p.synth && p.synth.transpose) || 0;
   const feel = (s % 4 === 0 ? 1.08 : s % 2 === 0 ? 1 : 0.9) * (0.95 + Math.random()*0.1);
