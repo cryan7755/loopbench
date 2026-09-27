@@ -253,7 +253,9 @@ function makeSong(style, seed, parts){
     R('hook');   song.melody = pick(MELODY_STYLES);
     Object.assign(song, {dropHook: composeHook(song), arpShape: pick(ARP_SHAPES), counterShape: pick(COUNTER_SHAPES)});
     R('bass');   Object.assign(song, {riffs: [makeRiff(), makeRiff(), makeRiff()], bassWave: pick(['sawtooth','square']), leadWave: pick(['square','sawtooth']), arpWave: 'pluck'});
-    R('vocal');  Object.assign(song, {vocal: composeVocal(song, 'chorus'), verseVocal: composeVocal(song, 'verse')});
+    R('vocal');  song.vocal = composeVocal(song, 'chorus');
+    const peak = linePeak(song.vocal);
+    Object.assign(song, {verseVocal: composeVocal(song, 'verse', peak), preVocal: composeVocal(song, 'pre', peak)});
     R('sound');  song.dna = makeDNA(style);
     R('form');   song.form = pick(STYLES[style].forms || Object.keys(FORMS)); song.arrangement = makeArrangement(song, song.form);
     return song;
