@@ -46,8 +46,8 @@ function buildMidi(){
   const PPQ = 96, STEP = 24;
   const mk = (name, ch, program) => ({name, ch, program, ev:[]});
   const T = {drums: mk('Drums', 9), bass: mk('Bass', 0, 38), chords: mk('Chord stabs', 1, 50), pad: mk('Pad and chord wall', 2, 88),
-             lead: mk('Lead', 3, 81), arp: mk('Arp', 4, 80), counter: mk('Counter melody', 5, 11), vocal: mk('Vocal melody', 6, 53)};
-  const markers = [];
+             lead: mk('Lead', 3, 81), arp: mk('Arp', 4, 80), counter: mk('Counter melody', 5, 11), vocal: mk('Topline: ' + toplineLabel(), 6, toplineGM())};
+  const markers = [], toplineShift = (TOPLINES[toplineId()] || {shift:0}).shift;
   const add = (tr, tick, note, len, vel = 100) => {
     note = Math.round(note); if(note < 0 || note > 127) return;
     vel = Math.max(1, Math.min(127, Math.round(vel)));
@@ -64,7 +64,7 @@ function buildMidi(){
       DRUMS.forEach((d,i) => {
         if(!p.drums[i][s]) return;
         const vel = 100*g(d.id)*(s % 4 === 0 ? 1.1 : 0.9);
-        add(T.drums, at, GM_DRUMS[d.id], 12, vel);
+        add(T.drums, at, percNote(p, d.id, s) || GM_DRUMS[d.id], 12, vel);
         if(p.half && p.half[d.id] && p.half[d.id].includes(s)) add(T.drums, at + 12, GM_DRUMS[d.id], 12, vel*0.9);
       });
       const S = p.synth || state.synth, bl = ((S.len || 0.9))*STEP;
@@ -73,7 +73,7 @@ function buildMidi(){
       [[p.lead, p.leadSynth], [p.lead2, p.lead2Synth]].forEach(([line, LS]) => { if(line && LS) line.forEach(([r,st,d]) => { if(st === s) add(T.lead, at, midiOf(r, LS), (d || LS.len || 0.9)*STEP); }); });
       if(p.arp) p.arp.forEach(([r,st]) => { if(st === s) add(T.arp, at, 72 + p.arpT + r, STEP*0.5, 80); });
       if(p.counter) p.counter.forEach(([r,st]) => { if(st === s) add(T.counter, at, 72 + p.counterT + r, STEP*2, 85); });
-      if(p.vocal) p.vocal.forEach(v => { if(v.s === s) add(T.vocal, at, v.m, v.len*STEP, v.chop ? 95 : 90); });
+      if(p.vocal) p.vocal.forEach(v => { if(v.s === s) add(T.vocal, at, v.m + toplineShift, v.len*STEP, v.chop ? 95 : 90); });
       if(p.chords && p.chords.steps.includes(s)) (p.chords.voiced || [...(p.chords.ext || p.chords.ints), 12].map(r => 60 + p.chords.T + r)).forEach(m => add(p.chords.len > 2 ? T.pad : T.chords, at, m, p.chords.len*STEP, 80));
       if(p.wall && s === 0) (p.wall.voiced ? [48 + p.wall.T + (p.wall.bass || 0), ...p.wall.voiced] : [48 + p.wall.T, 60 + p.wall.T + p.wall.ints[1], 60 + p.wall.T + p.wall.ints[2], 72 + p.wall.T]).forEach(m => add(T.pad, at, m, p.wall.len*STEP, 70));
     }

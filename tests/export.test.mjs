@@ -22,7 +22,7 @@ test('MIDI export is a valid multitrack file with section markers', async () => 
     o += 8 + len;
   }
   assert.equal(o, bytes.length, 'file length matches its tracks');
-  for (const n of ['Drums', 'Bass', 'Lead', 'Vocal melody']) assert.ok(names.includes(n), `missing ${n} track`);
+  for (const n of ['Drums', 'Bass', 'Lead', 'Topline']) assert.ok(names.some(x => x.startsWith(n)), `missing ${n} track`);
   assert.ok(notes > 1000, `only ${notes} notes`);
   const markers = Buffer.from(bytes).toString('latin1');
   for (const label of app.arr().map(s => s.label)) assert.ok(markers.includes(label), `missing marker ${label}`);

@@ -118,7 +118,7 @@ select{background:var(--cell);border:1px solid var(--line);border-radius:6px;hei
   <section class="transport" aria-label="Transport">
     <button class="play" id="play" aria-pressed="false">Play</button>
     <div class="field"><span>Tempo</span>
-      <div class="bpm"><button id="bpmDown" aria-label="Slower">−</button><input id="bpm" type="number" min="60" max="200" aria-label="Beats per minute"><button id="bpmUp" aria-label="Faster">+</button></div>
+      <div class="bpm"><button id="bpmDown" aria-label="Slower">−</button><input id="bpm" type="number" min="60" max="300" aria-label="Beats per minute"><button id="bpmUp" aria-label="Faster">+</button></div>
     </div>
     <label class="field"><span>Swing</span><input id="swing" type="range" min="0" max="100"></label>
     <label class="field"><span>Volume</span><input id="master" type="range" min="0" max="100"></label>
@@ -129,8 +129,12 @@ select{background:var(--cell);border:1px solid var(--line);border-radius:6px;hei
       <select id="palette" aria-label="Sound palette">
         <option value="hybrid">Sound: hybrid</option><option value="orchestral">Sound: orchestral (no synths)</option><option value="electronic">Sound: all synth</option>
       </select>
-      <select id="vocalStyle" aria-label="Vocal sound">
-        <option value="oohs">Vocals: sung oohs</option><option value="choir">Vocals: choir aahs</option><option value="synth">Vocals: synthesized</option><option value="off">Vocals: off</option>
+      <select id="vocalStyle" aria-label="Melody instrument (topline)">
+        <option value="auto">Topline: auto (per song)</option><option value="violin">Topline: violin</option><option value="sax">Topline: saxophone</option>
+        <option value="flute">Topline: flute</option><option value="gtrlead">Topline: lead guitar</option><option value="epiano">Topline: electric piano</option>
+        <option value="piano">Topline: piano</option><option value="vibes">Topline: vibraphone</option><option value="marimba">Topline: marimba</option>
+        <option value="sqlead">Topline: square lead</option><option value="bell">Topline: bell</option><option value="off">Topline: off</option>
+        <option value="oohs">Old: sung oohs</option><option value="choir">Old: choir aahs</option><option value="synth">Old: synthesized voice</option>
       </select>
       <select id="quality" aria-label="Sound quality">
         <option value="high">Quality: high</option><option value="balanced">Quality: balanced</option><option value="light">Quality: light (smoothest)</option>
@@ -174,7 +178,7 @@ select{background:var(--cell);border:1px solid var(--line);border-radius:6px;hei
       <button class="chip" data-reroll="hook">New hook</button>
       <button class="chip" data-reroll="chords">New chords</button>
       <button class="chip" data-reroll="bass">New bassline</button>
-      <button class="chip" data-reroll="vocal">New vocal</button>
+      <button class="chip" data-reroll="vocal">New topline melody</button>
       <button class="chip" data-reroll="drums">New groove</button>
       <button class="chip" data-reroll="sound">New sounds</button>
       <button class="chip" data-reroll="form">New structure</button>

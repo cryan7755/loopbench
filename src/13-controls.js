@@ -1,6 +1,6 @@
 /* ---------- Transport controls ---------- */
 const bpmIn = $('bpm');
-const setBpm = v => { state.bpm = Math.min(200, Math.max(60, Math.round(v)||120)); bpmIn.value = state.bpm; save(); };
+const setBpm = v => { state.bpm = Math.min(300, Math.max(60, Math.round(v)||120)); bpmIn.value = state.bpm; save(); };
 bpmIn.value = state.bpm;
 bpmIn.onchange = () => setBpm(+bpmIn.value);
 $('bpmDown').onclick = () => setBpm(state.bpm-1);
@@ -76,8 +76,9 @@ $('bulkInput').onchange = e => { loadMany([...e.target.files]); e.target.value =
 $('clearAll').onclick = () => { USER_SLOTS.forEach(sl => { delete userRaw[sl.id]; delete sampleBufs['user_' + sl.id]; idbDel(sl.id); }); paintSlots(); msg('All your samples were removed; the built-in sounds are back.'); };
 $('slots').addEventListener('drop', e => { if(e.dataTransfer.files.length > 1){ e.preventDefault(); e.stopPropagation(); loadMany([...e.dataTransfer.files]); } }, true);
 idbAll().then(all => { Object.assign(userRaw, all); if(ctx) decodeAllUser().then(paintSlots); paintSlots(); });
-$('vocalStyle').value = state.vocalStyle || 'oohs';
-$('vocalStyle').onchange = e => { state.vocalStyle = e.target.value; save(); };
+if(!state.toplineSet){ state.vocalStyle = 'auto'; state.toplineSet = true; }   // the old sung-vowel default gives way to toplines
+$('vocalStyle').value = state.vocalStyle || 'auto';
+$('vocalStyle').onchange = e => { state.vocalStyle = e.target.value; save(); paint(); };
 $('palette').value = state.palette || 'hybrid';
 $('palette').onchange = e => { state.palette = e.target.value; save(); };
 $('quality').value = state.quality || (IS_MOBILE ? 'light' : 'balanced');

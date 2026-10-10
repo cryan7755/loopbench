@@ -30,6 +30,7 @@ Object.assign(PATCHES, {
   user_pad:   {sample:'user_pad',   a:0.08,  r:0.6,  gain:0.7, rev:0.45, del:0.05, loop:true, fallback:'wall'},
   user_vocal: {sample:'user_vocal', a:0.01,  r:0.25, gain:0.9, rev:0.45, del:0.3,  fallback:'pluck'},
   gtrlead: {sample:'gtr', a:0.003, r:0.2, gain:0.8, rev:0.25, del:0.2, fallback:'sqlead'},
+  epiano:  {fm:true, ratio:1, index:2.6, idecay:0.7, voices:2, spread:6, width:0.5, cutoff:5200, q:0.7, a:0.002, d:1.6, s:0.3, r:0.45, rev:0.32, del:0.18, cho:0.35, gain:0.34},
   pizz:    {sample:'pizz',    a:0.002, r:0.25, gain:1.0,  rev:0.35, del:0.2,  fallback:'pluck'},
 });
 const sampleBufs = {}; let samplesReady = false, samplesPromise = null;
