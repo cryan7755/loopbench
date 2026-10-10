@@ -184,6 +184,7 @@ function makeDNA(style){
     build: pick(['roll','roll','filter','kickroll','vocal']), gap: pick(['beat','beat','half']),
     shout: chance(0.4), stutter: chance(0.5),
   };
+  Object.assign(dna, pickTopline(style));
   if(st.kit){ const k = dna.kit; k.kick *= st.kit.kick || 1; k.decay *= st.kit.decay || 1; if(st.kit.drive) k.drive = st.kit.drive; }
   return dna;
 }

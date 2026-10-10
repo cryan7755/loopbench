@@ -37,8 +37,8 @@ export function sampleSource() {
   }
   const loops = JSON.parse(readFileSync(join(vdir, 'loops.json'), 'utf8'));
   return [
-    '/* Recorded instruments: string sections, solo violin, contrabass, harp and orchestral percussion from the',
-    '   Versilian Studios Chamber Orchestra 2 CE; grand piano, hand claps, hi-hats, snare and shaker from the',
+    '/* Recorded instruments: string sections, solo violin, flute, contrabass, harp and orchestral percussion from the',
+    '   Versilian Studios Chamber Orchestra 2 CE; grand piano, tenor sax, vibraphone, marimba, hand claps, hi-hats, snare and shaker from the',
     '   Versilian Community Sample Library; electric guitar from Karoryfer Black and Green Guitars; acoustic',
     '   drum kit from Virtuosity Drums. All public domain (CC0). See LICENSES/. */',
     'const SAMPLE_DATA = ' + JSON.stringify(samples) + ';',

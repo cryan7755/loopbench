@@ -5,7 +5,7 @@
 
 const ED_PARTS = {
   lead:  {label:'Lead',  lo:52, hi:88},
-  vocal: {label:'Vocal', lo:50, hi:82},
+  vocal: {label:'Topline', lo:50, hi:82},
   bass:  {label:'Bass',  lo:26, hi:58},
   drums: {label:'Drums'},
 };
@@ -71,7 +71,7 @@ function edRange(){
 function edPreview(part, m, row){
   ensureAudio(); const t = ctx.currentTime + 0.02;
   if(part === 'drums'){ const id = DRUMS[row].id, hit = drumSample(id); hit ? playHit(hit, t, 0.8, 1) : VOICES[id](t, 0.8, false); return; }
-  if(part === 'vocal') return sampleBufs.voice_oohs ? singSampled(m, t, 0.4, state.mix.vocal.vol, {}) : sing(m, t, 0.4, ['a'], state.mix.vocal.vol);
+  if(part === 'vocal') return playTopline({m, len: 0.4/stepDur()}, t, state.mix.vocal.vol);
   if(part === 'bass') return playNote(m, t, state.mix.synth.vol, {wave:'rockbass', octave:-1, transpose:0, len:2});
   return playNote(m, t, state.mix.lead.vol, {wave:'lead', octave:-1, transpose:0, len:2});
 }

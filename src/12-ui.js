@@ -71,7 +71,7 @@ const LAYER_PREVIEW = {
   chords: t => playChord(0, t, 3, state.mix.chords.vol, MINOR, 'saws'),
   arp:    t => [0,3,7,12].forEach((r,i) => playArp(r, 0, t + i*stepDur(), state.mix.arp.vol)),
   sub:    t => playSub(0, 0, t, state.mix.sub.vol),
-  vocal:  t => { const vs = state.vocalStyle || 'oohs', go = (m, at, d, from) => vs === 'synth' || !sampleBufs.voice_oohs ? sing(m, at, d, ['o','a'], state.mix.vocal.vol, {from}) : singSampled(m, at, d, state.mix.vocal.vol, {from, style:vs}); go(69, t, 0.9); go(72, t+0.9, 0.5, 69); go(76, t+1.4, 1.2, 72); },
+  vocal:  t => { [[69, 0, 3.6, null], [72, 0.9, 2, 69], [76, 1.4, 4.8, 72]].forEach(([m, at, len, from]) => playTopline({m, len, from}, t + at, state.mix.vocal.vol)); },
   wall:   t => [48,63,67,72].forEach(m => synth(m, t, 1.2, 'wall', state.mix.wall.vol)),
   counter:t => [72,79,75].forEach((m,k) => synth(m, t + k*0.18, 0.4, 'bell', state.mix.counter.vol)),
   fx:     t => { riser(t, 0.8, 5, state.mix.fx.vol); impact(t+0.8, state.mix.fx.vol); },
@@ -116,7 +116,7 @@ function paint(){
   const np = $('nowPlaying'), sg = state.song;
   np.hidden = !(state.endless && sg && STYLES[sg.style]);
   if(sg && STYLES[sg.style]){
-    np.textContent = `Now playing “${sg.title}”, ${STYLES[sg.style].label} in ${KEYS[sg.key]} ${sg.scale} at ${sg.bpm} BPM` + (sg.form ? `, ${formOf(sg).label} with a ${LEAD_NAMES[sg.dna.lead] || 'lead'}` : '');
+    np.textContent = `Now playing “${sg.title}”, ${STYLES[sg.style].label} in ${KEYS[sg.key]} ${sg.scale} at ${state.bpm} BPM` + (sg.form ? `, ${formOf(sg).label} with a ${LEAD_NAMES[sg.dna.lead] || 'lead'}` : '') + (sg.dna && toplineId(sg) !== 'off' ? `, ${toplineLabel(sg).toLowerCase()} topline` : '');
     if(genView && genView.phase){
       const tag = document.createElement('span'), bd = stepDur()*16;
       tag.className = 'phase ' + genView.phase;

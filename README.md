@@ -1,6 +1,6 @@
 # Loopbench
 
-A browser-based EDM and trance song generator. Press **New song** and it writes and plays a complete track: intro, verses, breakdowns, builds, drops with a key change, and an outro, in any of 15 genres, with synths, sampled instruments and sung vocals. Songs can be exported as WAV audio or as multitrack MIDI for finishing in a DAW.
+A browser-based EDM and trance song generator. Press **New song** and it writes and plays a complete track: intro, verses, breakdowns, builds, drops with a key change, and an outro, in any of 15 genres, with synths, sampled instruments and a featured topline instrument carrying the melody. Songs can be exported as WAV audio or as multitrack MIDI for finishing in a DAW.
 
 Everything runs in the browser. The built app is a single self-contained HTML file with no server and no external dependencies.
 
@@ -17,10 +17,12 @@ Everything runs in the browser. The built app is a single self-contained HTML fi
 - **A planned energy arc:** each bar's intensity is measured and its texture (hi-hats, shaker, open hats, counter melody, filter, guitar level) shaped toward a curve: intro rising, verses moderate, builds climbing, breakdowns dipping, the final drop as the peak, the outro fading
 - **Arranged as an ensemble:** one foreground melody at a time (the lead answers in the singer's gaps; in EDM drops the voice doubles the hook), supporting lines kept above the melody and away from its new notes, and no semitone clashes between lines
 - **Per-song variety:** sound design, chord language (7ths, add9, sus), melody style, build recipe, drum kit, delay timing and trance gates all vary per song
-- **Sound palettes:** hybrid, orchestral (no synths) or all synth; recorded string sections, solo violin, cellos, contrabass, harp, grand piano, choir and orchestral percussion; recorded sung vocals
+- **Sound palettes:** hybrid, orchestral (no synths) or all synth; recorded string sections, solo violin, cellos, contrabass, harp, grand piano, tenor sax, flute, vibraphone, marimba, choir and orchestral percussion
+- **Topline instruments:** the composed vocal melody is played by an instrument picked per song from the genre's pool — violin over a trance breakdown, sax in synthwave, electric piano in deep house, flute as a pop whistle hook, lead guitar in rock — with glides between close notes, crossfaded long holds and marimba rolls; choose one from the Topline menu, or the old sung and synthesized voices
 - **Mix and master:** drum bus with parallel compression and saturation, key-tuned kicks, drum accents and groove, stereo widening, master EQ, soft clipping, glue compression and limiting
 - **Your own samples:** drop in kicks, claps, hats, lead/bass/pad notes or a vocal chop
 - **Edit generated songs:** a piano roll for the lead, vocal, bass and drums of any section, 4 bars at a time; edits are saved with the song, shown in orange, undoable, and included in playback, WAV and MIDI exports and favorites
+- **Tempo:** 60 to 300 BPM
 - **Song codes:** every song is reproducible from a short code like `trance-LGKB6R`; reroll just the hook, chords, bass, vocal, groove, sounds or structure
 - **Export:** WAV (rendered offline, normalised) and MIDI (one track per part, with section markers)
 - **Smooth playback:** bars are pre-rendered on background audio threads, so older CPUs play without dropouts
@@ -52,6 +54,7 @@ The app is plain JavaScript with no framework. `scripts/build.mjs` joins the fil
 | `src/02-audio-engine.js` | Audio graph (reverb, delay, chorus, sidechain bus, filters) and drum voices |
 | `src/03-patches.js` | Synth and sampled-instrument patch presets, sample loading |
 | `src/04-voices.js` | Synth voice engine, sampler, your sample slots, sound-palette routing |
+| `src/05-topline.js` | Topline instruments: per-genre pools, the menu choice, and how each instrument phrases the melody |
 | `src/05-vocals-and-fx.js` | Sampled and synthesized vocals, risers, downlifters, impacts |
 | `src/06-song-generator.js` | Seeds and song codes, genres, scales and chords, melodies, sound DNA |
 | `src/07-arrangement.js` | Song forms and section builders (`generateBar`) |

@@ -46,7 +46,7 @@ function playStep(p, s, tt){
   const extra = id => id === 'kick' ? p.bigKick : (p.pitch && p.pitch[id]) || 1;
   DRUMS.forEach((d,i) => {
     if(!p.drums[i][s] || !audible(d.id)) return;
-    const hit = drumSample(d.id, p), pitchArg = d.id === 'kick' ? 1 : extra(d.id);
+    const hit = drumSample(d.id, p, s), pitchArg = d.id === 'kick' ? 1 : extra(d.id);
     const v = state.mix[d.id].vol*gain(d.id)*drumVel(d.id, s, p), at0 = tt + drumNudge(d.id, s);
     const play = at => hit ? playHit(hit, at, v, pitchArg) : VOICES[d.id](at, v, extra(d.id));
     play(at0);
@@ -77,12 +77,7 @@ function playStep(p, s, tt){
   }
   if(p.counter && audible('counter')) p.counter.forEach(([r,st]) => { if(st === s) synth(72 + p.counterT + r, tt, stepDur()*2, remapPatch((state.song && state.song.dna && state.song.dna.counter) || 'bell', 'counter', p), state.mix.counter.vol); });
   if(p.gate && p.gate.pattern[s] && audible('wall')) (p.gate.voiced || (p.gate.ext || p.gate.ints).map(r => 60 + p.gate.T + r)).forEach(m => synth(m, tt, stepDur()*0.8, remapPatch('saws', 'gate', p), state.mix.wall.vol*0.45));
-  if(p.vocal && audible('vocal')) p.vocal.forEach(n => { if(n.s !== s) return;
-    const vs = state.vocalStyle || 'oohs';
-    if(hasUser('vocal')) synth(n.m, tt, n.len*stepDur(), 'user_vocal', state.mix.vocal.vol);
-    else if(vs === 'off') return;
-    else if(vs === 'synth' || !samplesReady || !sampleBufs.voice_oohs) sing(n.m, tt, n.len*stepDur(), n.vw, state.mix.vocal.vol, {from:n.from, chop:n.chop});
-    else singSampled(n.m, tt, n.len*stepDur(), state.mix.vocal.vol, {from:n.from, chop:n.chop, style:vs}); });
+  if(p.vocal && audible('vocal')) p.vocal.forEach(n => { if(n.s === s) playTopline(n, tt, state.mix.vocal.vol, p); });
   const L2 = p.lead2Synth && Object.assign({}, p.lead2Synth, {wave: remapPatch(patchOf(p.lead2Synth), 'lead2', p)});
   if(p.lead2 && audible('lead')) p.lead2.forEach(([r,st,d]) => { if(st === s) playNote(r, tt, state.mix.lead.vol*0.5, d ? Object.assign({}, L2, {len: Math.min(d, 2)}) : L2); });
   if(p.sub && audible('sub')) for(let r=0;r<ROWS;r++) if(p.notes[r][s]) playSub(r, T, tt, state.mix.sub.vol, (p.synth && p.synth.len) || 0.9);

@@ -27,7 +27,7 @@ const LAYERS = [
   {id:'chords', name:'Chords', color:'#E9A6D8'},
   {id:'arp',    name:'Arp',    color:'#6FC3FF'},
   {id:'sub',    name:'Sub',    color:'#8A93F0'},
-  {id:'vocal',  name:'Vocals', color:'#FF8FB1'},
+  {id:'vocal',  name:'Topline', color:'#FF8FB1'},
   {id:'wall',   name:'Chord wall', color:'#F7B267'},
   {id:'counter',name:'Counter melody', color:'#B8E1FF'},
   {id:'gtr',    name:'Guitars', color:'#E0703C'},
