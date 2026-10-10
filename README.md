@@ -11,6 +11,7 @@ Everything runs in the browser. The built app is a single self-contained HTML fi
 - **Full song forms:** classic, cold open, extended mix, fake-out drop, radio edit, with section lengths chosen per song from its tempo and phrase length, so no two songs share the same structure
 - **Composed, not just randomised:** each section has its own progression with a harmonic job (the verse settles, the pre-chorus ends on a dominant that resolves into the chorus, the bridge contrasts), built from harmonic function and coloured per genre with borrowed chords, secondary dominants, the harmonic-minor V and bass-smoothing inversions, then voice-led so chords glide; hooks and vocal lines are written as sentences or question-and-answer periods, generated dozens of times and ranked by rules from music-cognition research (chord tones on strong beats, resolved leaps, a single well-placed peak, a firm cadence, a middle amount of predictability)
 - **One motif through the song:** the hook's opening figure is the song's motif; the chorus vocal sings and sequences it, the verse fragments and inverts it lower down and ends open, the pre-chorus climbs by sequencing it upward, and the chorus holds the song's highest sung note; vocals lean on strong beats with appoggiaturas that resolve by step
+- **Genre percussion:** recorded bongos, congas, tambourine, claves, woodblock, agogo and cabasa; each genre has its own percussion character (bongos in tech house, congas in deep house, ride in trance, tambourine in pop and rock choruses), holding a pattern through each phrase and varying at phrase ends
 - **Melodic bass lines:** the bass steps into chord changes with approach notes and chooses octaves that move against the melody, avoiding parallel octaves and fifths (genres built on a held bass keep it)
 - **A song critic:** every song can be scored out of 100 across six areas (the Song report button, or `npm run critic` for a report across genres)
 - **A planned energy arc:** each bar's intensity is measured and its texture (hi-hats, shaker, open hats, counter melody, filter, guitar level) shaped toward a curve: intro rising, verses moderate, builds climbing, breakdowns dipping, the final drop as the peak, the outro fading
@@ -67,6 +68,7 @@ The app is plain JavaScript with no framework. `scripts/build.mjs` joins the fil
 | `src/19-energy.js` | Energy arc: measures each bar's intensity and shapes texture toward a target curve per section |
 | `src/20-bassline.js` | Bass lines and counterpoint: approach notes into chord changes, contrary motion against the melody |
 | `src/21-critic.js` | The critic: scores a whole song for melody, harmony, ensemble, counterpoint, energy and structure |
+| `src/22-percussion.js` | Each genre's percussion character: sounds, pattern pools and phrase-by-phrase variation |
 | `assets/samples/<instrument>/<midi-note>.mp3` | Instrument samples |
 | `assets/vocals/<bank>/<midi-note>.wav` | Vocal samples; loop points in `loops.json` |
 | `tests/` | Test suite (`node --test`) |
