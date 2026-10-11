@@ -7,7 +7,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {ROOT} from './bundle.mjs';
 const run=promisify(execFile);
-const base='https://raw.githubusercontent.com/freepats/upright-piano-KW/master/';
+const base='https://raw.githubusercontent.com/freepats/upright-piano-KW/main/';
 const sfz=await (await fetch(base+'UprightPianoKW-20220221.sfz')).text();
 if(!sfz.includes('sample=samples/'))throw Error('Upstream piano SFZ unavailable');
 let group={},region=null,zones=[];
