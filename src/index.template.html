@@ -224,6 +224,14 @@ select{background:var(--cell);border:1px solid var(--line);border-radius:6px;hei
     </div>
     <div class="scroll"><div class="grid" id="roll"></div></div>
   </section>
+  <section class="rack" aria-label="Instrument Packs" id="instrumentPacks">
+    <div class="rack-top"><h2>SFZ Instrument Packs</h2>
+      <label class="field">Instrument <select id="sfzBank"></select></label>
+      <button class="chip" id="sfzLoad">Load SFZ + recordings</button>
+      <input type="file" id="sfzFiles" accept=".sfz,.wav,.mp3,.ogg,.flac" multiple hidden>
+    </div>
+    <p class="hint" id="sfzStatus" role="status">Select an SFZ mapping and all referenced audio files together. Imported samples replace the selected instrument for playback and WAV export during this session.</p>
+  </section>
   <section class="rack" aria-label="Your samples">
     <div class="rack-top"><h2>Your samples</h2><button class="chip" id="bulkPick">Load several files</button><button class="chip" id="clearAll">Remove all</button><input type="file" id="bulkInput" accept="audio/*" multiple hidden></div>
     <div class="slots" id="slots"></div>
