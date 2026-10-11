@@ -3,7 +3,7 @@ function sfzRegions(source){
  const tokens=[...source.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|\s)\/\/[^\n]*/g,'$1').matchAll(/<(global|group|region)>|([a-z][a-z0-9_]*)=([^\s<>]+)/gi)];
  let global={},group={},region=null,section='',result=[];
  for(const t of tokens){
-  if(t[1]){section=t[1].toLowerCase();if(section==='global'){global={};group={};region=null;}else if(section==='group'){group={...global};region=null;}else{region={...group};result.push(region);}}
+  if(t[1]){section=t[1].toLowerCase();if(section==='global'){global={};group={};region=null;}else if(section==='group'){group={...global};region=null;}else{region={...global,...group};result.push(region);}}
   else {let k=t[2].toLowerCase(),val=t[3];if(section==='global')global[k]=val;else if(section==='group')group[k]=val;else if(region)region[k]=val;}
  }
  return result.filter(r=>r.sample);
