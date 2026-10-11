@@ -23,7 +23,7 @@ function rPlan(){
     const item = {rel: rRel, p, sd: stepDur(), buf: null, started: false, gen: rGen};
     rRel += item.sd*16; rItems.push(item);
     renderBar(p).then(buf => { if(item.gen !== rGen || !playing) return; item.buf = buf; rStart(); })
-                .catch(e => console.error('Render failed', e));
+                .catch(e => { if(item.gen !== rGen || !playing) return; console.error('Render failed; reverting to direct playback', e); stop(); start(); });
   }
 }
 function rStart(){
