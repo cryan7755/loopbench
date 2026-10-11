@@ -22,7 +22,7 @@ test('no genre falls far behind', () => {
 });
 
 test('the critic notices when the arranger, energy shaper or bass shaping is switched off', () => {
-  const sample = ['trance', 'pop', 'future', 'rock', 'deephouse', 'dnb'].map(g => app.makeSong(g));
+  const sample = ['trance', 'pop', 'future', 'rock', 'deephouse', 'dnb'].flatMap(g => ['Q7M2X8','B4N9K2','H8R3P5','T5C7W1'].map(seed => app.makeSong(g, seed)));
   const score = (key, off) => { off(false); const v = sample.reduce((a, s) => a + app.songReport(s).scores[key], 0) / sample.length; off(true); return v; };
   const on = k => sample.reduce((a, s) => a + app.songReport(s).scores[k], 0) / sample.length;
   assert.ok(on('ensemble') > score('ensemble', app.setEnsemble) + 5, 'switching off the arranger should lower the ensemble score');
