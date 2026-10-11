@@ -40,7 +40,7 @@ export function sampleSource() {
   const premium=join(sdir,'piano-hq');
   if(existsSync(premium)){
     const notes={};
-    for(const f of readdirSync(premium).filter(f=>/^\\d+-\\d+-\\d+\\.mp3$/.test(f))){
+    for(const f of readdirSync(premium).filter(f=>/^\d+-\d+-\d+\.mp3$/.test(f))){
       notes[f.slice(0,-4)]=b64(join(premium,f));
     }
     if(Object.keys(notes).length>=40)samples.piano=notes;

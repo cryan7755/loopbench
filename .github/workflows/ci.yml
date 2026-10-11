@@ -18,6 +18,8 @@ jobs:
       - run: npm ci
       - run: node scripts/validate-source.mjs
       - run: npm test
+      - name: Install FFmpeg for sample encoding
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Install CC0 recorded piano
         run: node scripts/install-piano.mjs
       - run: npm run build
