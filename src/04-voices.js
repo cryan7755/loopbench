@@ -27,14 +27,26 @@ function sampler(midi, t, dur, P, v){
   const keyed=eligible.length?eligible:zones;
   const velocity=Math.round(Math.max(0,Math.min(1,v))*127);
   const matched=keyed.filter(z=>velocity >= (z.lovel??0) && velocity <= (z.hivel??127));
-  const pool=matched.length?matched:keyed;
+  // When there is a gap in velocity layers, choose the closest layer instead of
+  // an arbitrary first sample. Preserve recorded velocity boundaries.
+  const distance=z=>velocity < (z.lovel??0) ? (z.lovel??0)-velocity :
+    velocity > (z.hivel??127) ? velocity-(z.hivel??127) : 0;
+  const pool=matched.length?matched:keyed.filter(z=>distance(z)===Math.min(...keyed.map(distance)));
   let z=pool[0]; for(const c of pool) if(Math.abs(c.m-midi)<Math.abs(z.m-midi))z=c;
   const rr=pool.filter(c=>c.m===z.m && c.lovel===z.lovel && c.hivel===z.hivel);
   if(rr.length>1){const key=(P.sample||'sample')+':'+midi+':'+velocity; const idx=sfzRoundRobin[key]||0;z=rr[idx%rr.length];sfzRoundRobin[key]=idx+1;}
   const src = ctx.createBufferSource(); src.buffer = z.buf;
   const rate = Math.pow(2, (midi - z.m)/12); src.playbackRate.value = rate;
   const natural = z.buf.duration / rate;
-  if(P.loop && dur > natural - 0.5){ src.loop = true; src.loopStart = z.le ? z.ls : 1.0; src.loopEnd = z.le ? z.le : z.buf.duration - 0.35; }
+  // Do not invent a loop on short or one-shot recordings: invalid loop
+  // boundaries produce glitches or browser-specific playback errors.
+  if(P.loop && dur > natural - 0.5){
+    const start=z.ls!=null ? z.ls : 1.0;
+    const end=z.le!=null ? z.le : z.buf.duration-0.35;
+    if(start>=0 && end>start+0.02 && end<=z.buf.duration){
+      src.loop=true;src.loopStart=start;src.loopEnd=end;
+    }
+  }
   const amp = ctx.createGain(), pk = v*(P.gain || 0.8), a = P.a || 0.003, hold = t + Math.max(dur, a + 0.01), r = P.r || 0.3;
   amp.gain.setValueAtTime(0.0001, t);
   amp.gain.linearRampToValueAtTime(pk, t + a);
