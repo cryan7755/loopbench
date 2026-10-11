@@ -18,6 +18,8 @@ jobs:
       - run: npm ci
       - run: node scripts/validate-source.mjs
       - run: npm test
+      - name: Install CC0 recorded piano
+        run: node scripts/install-piano.mjs
       - run: npm run build
       - name: Upload standalone HTML
         uses: actions/upload-artifact@v4
