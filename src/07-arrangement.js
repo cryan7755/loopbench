@@ -68,16 +68,30 @@ function barFor(base, loc, n){
       wall:{T, ints, ext, voiced, bass, len:16, bright:0.8}, vocal: vocalBar(song, i, T, ints, 0, song.verseVocal, song.bdProg), counter: counterLine(song, ints, [], 2), counterT:T,
       busFilter:{lp:[5000,5000], hp:[20,20]}, gain:{kick:0.8, snare:0.85}, down: i === 0});
   } else if(sec.name === 'fake'){
-    // fake-out: the drop starts... and cuts after two beats, then a quick re-build
+    // Musical fake-out: tease only one downbeat of the real hook, then give
+    // the listener space. The following build earns the complete drop.
     if(i === 0){
       p = cycleBar(song, 16);
-      const cutAt = 8;
-      DRUMS.forEach((_, r) => { p.drums[r] = p.drums[r].map((on, st2) => on && st2 < cutAt); });
-      p.notes = p.notes.map(row => row.map((on, st2) => on && st2 < cutAt));
-      ['lead','arp','counter','vocal','lead2'].forEach(k => { if(p[k]) p[k] = p[k].filter(e => (Array.isArray(e) ? e[1] : e.s) < cutAt); });
-      if(p.chords) p.chords.steps = p.chords.steps.filter(st2 => st2 < cutAt);
-      p.wall = null; p.gate = null; p.duck = false;
-    } else { p = cycleBar(song, 8 + 5); p.kick = null; setDrum(p, 'kick', []); }
+      const cutAt = 4; // one beat instead of half a bar
+      DRUMS.forEach((_,r)=>{p.drums[r]=p.drums[r].map((on,step)=>on && step<cutAt);});
+      p.notes=p.notes.map(row=>row.map((on,step)=>on && step<cutAt));
+      for(const k of ['lead','arp','counter','vocal','lead2']){
+        if(p[k])p[k]=p[k].filter(e=>(Array.isArray(e)?e[1]:e.s)<cutAt);
+      }
+      if(p.chords)p.chords.steps=p.chords.steps.filter(step=>step<cutAt);
+      // Restrict the fake hit to bass, kick, and an unmistakable hook fragment.
+      p.wall=null;p.gate=null;p.counter=null;p.arp=null;p.vocal=null;
+      p.impact=false;p.down=false;p.duck=false;
+      setDrum(p,'crash',[]);
+      p.busFilter={lp:[9500,1600],hp:[30,140]};
+    } else {
+      // Ambient answer, not a second miniature drop: brief suspense into build.
+      p=buildPattern({chat:[10,14],snare:[15]},[]);
+      p.sub=false;p.wall=null;p.gate=null;p.chords=null;p.arp=null;
+      p.lead=null;p.counter=null;p.vocal=null;
+      p.impact=false;p.down=false;p.duck=false;
+      p.busFilter={lp:[2200,4000],hp:[140,60]};
+    }
   } else if(sec.name === 'build'){
     p = cycleBar(song, (sec.second ? 32 : 0) + 8 + scale8(i, sec.bars), {bar: i, bars: sec.bars});
   } else if(sec.name === 'drop'){
