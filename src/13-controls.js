@@ -152,7 +152,7 @@ $('genre').value = state.genre || 'any';
 $('genre').onchange = e => { state.genre = e.target.value; save(); };
 $('newsong').onclick = () => {
   state.song = makeSong(state.genre && state.genre !== 'any' ? state.genre : undefined); state.bpm = state.song.bpm; state.swing = STYLES[state.song.style].swing || 0; $('swing').value = state.swing; state.endless = true;
-  bpmIn.value = state.bpm; $('swing').value = 0;
+  bpmIn.value = state.bpm; $('swing').value = state.swing;
   if(playing){ if(rMode){ bar = 0; rReset(); } else bar = -1; } else start();
   paint(); save();
 };

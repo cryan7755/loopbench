@@ -23,7 +23,7 @@ function rPlan(){
     const item = {rel: rRel, p, sd: stepDur(), buf: null, started: false, gen: rGen};
     rRel += item.sd*16; rItems.push(item);
     renderBar(p).then(buf => { if(item.gen !== rGen || !playing) return; item.buf = buf; rStart(); })
-                .catch(e => console.error('Render failed', e));
+                .catch(e => { if(item.gen !== rGen || !playing || !rMode) return; console.error('Render-ahead failed; switching to direct playback', e); const resume = Math.max(0, bar - rItems.length); stop(); start(resume, true); });
   }
 }
 function rStart(){
@@ -82,10 +82,10 @@ function draw(){
   if(playing && songOver && endAt !== null && ctx.currentTime > endAt){ stop(); return; }
   if(playing) requestAnimationFrame(draw);
 }
-function start(from = 0){
+function start(from = 0, forceDirect = false){
   ensureAudio();
   playing = true; step = 0; bar = from; genBar = null; playPattern = state.current; queue = []; songOver = false; endAt = null;
-  rMode = !!(state.endless && state.renderAhead !== false && OAC);
+  rMode = !!(!forceDirect && state.endless && state.renderAhead !== false && OAC);
   if(rMode){
     rGen++; rItems = []; rT0 = null; rRel = 0; rSources = []; rAhead = 3; sampleWait = Date.now() + 4000;
     rPlan(); rTimer = setInterval(rPlan, 200);
