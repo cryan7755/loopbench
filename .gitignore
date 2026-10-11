@@ -1,0 +1,5 @@
+node_modules/
+dist/
+assets/samples/piano-hq/
+*.log
+.DS_Store
