@@ -1,5 +1,5 @@
 // Assembles the single-file app from src/ and assets/. No dependencies.
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,6 +34,17 @@ export function sampleSource() {
     vocals[bank] = {};
     for (const f of readdirSync(join(vdir, bank)).filter(f => f.endsWith('.wav')).sort(byNote))
       vocals[bank][f.replace(/\.wav$/, '')] = b64(join(vdir, bank, f));
+  }
+  // Release builds embed two recorded velocity layers from the CC0 FreePats Kawai piano.
+  // Key format is pitch-lowVelocity-highVelocity. Local builds retain the original piano.
+  const premium=join(sdir,'piano-hq');
+  if(existsSync(premium)){
+    const notes={};
+    for(const f of readdirSync(premium).filter(f=>/^\\d+-\\d+-\\d+\\.mp3$/.test(f))){
+      notes[f.slice(0,-4)]=b64(join(premium,f));
+    }
+    if(Object.keys(notes).length>=40)samples.piano=notes;
+    else throw Error('Premium piano sample bank is incomplete');
   }
   const loops = JSON.parse(readFileSync(join(vdir, 'loops.json'), 'utf8'));
   return [
