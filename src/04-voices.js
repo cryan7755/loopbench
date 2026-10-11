@@ -18,10 +18,19 @@ async function decodeUser(slot){
   sampleBufs['user_' + slot] = [{m: r.root || 60, buf}];
 }
 async function decodeAllUser(){ for(const k of Object.keys(userRaw)){ try{ await decodeUser(k); }catch(e){ console.warn('Could not decode', k, e); } } }
+const sfzRoundRobin={};
 function sampler(midi, t, dur, P, v){
   // strings below the violins' range are played by the cello section
   const zones = P.sample === 'strings' && midi < 55 && sampleBufs.cello ? sampleBufs.cello : sampleBufs[P.sample];
-  let z = zones[0]; for(const c of zones) if(Math.abs(c.m - midi) < Math.abs(z.m - midi)) z = c;
+  if(!zones || !zones.length) return;
+  const eligible=zones.filter(z=>midi >= (z.lokey??0) && midi <= (z.hikey??127));
+  const keyed=eligible.length?eligible:zones;
+  const velocity=Math.round(Math.max(0,Math.min(1,v))*127);
+  const matched=keyed.filter(z=>velocity >= (z.lovel??0) && velocity <= (z.hivel??127));
+  const pool=matched.length?matched:keyed;
+  let z=pool[0]; for(const c of pool) if(Math.abs(c.m-midi)<Math.abs(z.m-midi))z=c;
+  const rr=pool.filter(c=>c.m===z.m && c.lovel===z.lovel && c.hivel===z.hivel);
+  if(rr.length>1){const key=(P.sample||'sample')+':'+midi+':'+velocity; const idx=sfzRoundRobin[key]||0;z=rr[idx%rr.length];sfzRoundRobin[key]=idx+1;}
   const src = ctx.createBufferSource(); src.buffer = z.buf;
   const rate = Math.pow(2, (midi - z.m)/12); src.playbackRate.value = rate;
   const natural = z.buf.duration / rate;

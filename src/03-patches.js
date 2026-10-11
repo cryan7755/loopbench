@@ -53,7 +53,8 @@ function loadSamples(){
       const lp = typeof VOX_LOOPS === 'object' && VOX_LOOPS[bank] && VOX_LOOPS[bank][m];
       let buf = await ctx.decodeAudioData(bin.buffer);
       if(!lp) buf = trimLead(buf);   // MP3 encoders pad the start with silence; notes must start on time
-      return {m: +m, buf, ls: lp ? lp[0] : null, le: lp ? lp[1] : null};
+      const parts=m.split('-').map(Number);
+      return {m:parts[0],buf,lovel:parts.length===3?parts[1]:0,hivel:parts.length===3?parts[2]:127,ls:lp?lp[0]:null,le:lp?lp[1]:null};
     }));
     sampleBufs[bank] = zones.sort((a,b) => a.m - b.m);
   })).then(() => { samplesReady = true; }, e => { console.warn('Samples unavailable, using synths', e); });
