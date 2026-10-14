@@ -26,17 +26,25 @@ function makeGraph(c, offline){
   const dsum = c.createGain(), dcomp = c.createDynamicsCompressor(), wet = c.createGain(), dsat = c.createWaveShaper(), makeup = c.createGain();
   dcomp.threshold.value = -28; dcomp.ratio.value = 6; dcomp.attack.value = 0.003; dcomp.release.value = 0.12;
   wet.gain.value = 0.55; dsum.gain.value = 0.75; dsat.curve = curve(1.4); dsat.oversample = '2x'; makeup.gain.value = 1.25;
-  g.drumBus.connect(dsum); g.drumBus.connect(dcomp); dcomp.connect(wet); wet.connect(dsum);
+  // Pre-mix: remove subsonic rumble and soften harsh drum-bus buildup before parallel compression.
+  const drumHP = eq('highpass', 27, 0, 0.707), drumPresence = eq('peaking', 4200, -1.2, 0.8);
+  g.drumBus.connect(drumHP); drumHP.connect(drumPresence);
+  drumPresence.connect(dsum); drumPresence.connect(dcomp); dcomp.connect(wet); wet.connect(dsum);
   dsum.connect(dsat); dsat.connect(makeup); makeup.connect(g.master);
   // Synth bus: filters for section sweeps, air, then stereo widening (side boosted, mid kept)
   g.bus = c.createGain(); g.busHP = filter('highpass', 20, 0.7); g.busLP = filter('lowpass', 20000, 0.9);
-  const air = eq('highshelf', 9000, 2.5);
-  g.bus.connect(g.busHP); g.busHP.connect(g.busLP); g.busLP.connect(air);
+  // Pre-mix: cut low-mid masking on the instrument bus without thinning the sub-bass.
+  const lowMid = eq('peaking', 280, -1.8, 0.85), air = eq('highshelf', 9000, 1.2);
+  g.bus.connect(g.busHP); g.busHP.connect(g.busLP); g.busLP.connect(lowMid); lowMid.connect(air);
   const w = 0.3, split = c.createChannelSplitter(2), merge = c.createChannelMerger(2);
   const lin = (gv) => { const x = c.createGain(); x.gain.value = gv; return x; };
   const ll = lin(1 + w/2), lr = lin(-w/2), rr = lin(1 + w/2), rl = lin(-w/2);
+  // Keep low frequencies centered: crossfeed/widening acts only above 160 Hz.
+  const sideL = eq('highpass', 160, 0, 0.707), sideR = eq('highpass', 160, 0, 0.707);
   air.connect(split);
-  split.connect(ll, 0); split.connect(lr, 1); split.connect(rr, 1); split.connect(rl, 0);
+  split.connect(ll, 0); split.connect(rr, 1);
+  split.connect(sideL, 0); split.connect(sideR, 1);
+  sideL.connect(rl); sideR.connect(lr);
   ll.connect(merge, 0, 0); lr.connect(merge, 0, 0); rr.connect(merge, 0, 1); rl.connect(merge, 0, 1);
   merge.connect(g.master);
   // stereo chorus: two slowly modulated short delays, one per side
