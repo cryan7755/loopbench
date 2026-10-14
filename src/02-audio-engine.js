@@ -69,6 +69,18 @@ function makeGraph(c, offline){
   return g;
 }
 function useGraph(g){ ({ctx, master, bus, busLP, busHP, conv, revIn, delIn, delL, delR, fb: delFb, choIn, drumBus} = g); }
+// Shared post-mix chain used for live monitoring and final offline WAV mastering.
+function connectMasteringChain(c, source, destination, volume = 1){
+  const gain = c.createGain(); gain.gain.value = volume;
+  const trim = c.createGain(); trim.gain.value = 0.45;
+  const clip = c.createWaveShaper(); clip.curve = curve(1.15); clip.oversample = '4x';
+  const glue = c.createDynamicsCompressor();
+  glue.threshold.value = -14; glue.ratio.value = 3; glue.attack.value = 0.01; glue.release.value = 0.15;
+  const limit = c.createDynamicsCompressor();
+  limit.threshold.value = -3; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.08;
+  source.connect(gain); gain.connect(trim); trim.connect(clip); clip.connect(glue); glue.connect(limit); limit.connect(destination);
+  return {gain, trim, clip, glue, limit};
+}
 function ensureAudio(){
   if(!ctx){
     try{ if(navigator.audioSession) navigator.audioSession.type = 'playback'; }catch(e){}
@@ -79,15 +91,9 @@ function ensureAudio(){
     const d = noiseBuf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
     liveGraph = makeGraph(ctx, false);
-    const glue = ctx.createDynamicsCompressor();
-    glue.threshold.value = -14; glue.ratio.value = 3; glue.attack.value = 0.01; glue.release.value = 0.15;
-    const limit = ctx.createDynamicsCompressor();
-    limit.threshold.value = -3; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.08;
-    // Output stage: volume, headroom, a soft clipper for density, glue compression, limiter
-    liveOut = ctx.createGain(); liveOut.gain.value = state.master;
-    const trim = ctx.createGain(); trim.gain.value = 0.45;
-    const clip = ctx.createWaveShaper(); clip.curve = curve(1.15); clip.oversample = '4x';
-    liveGraph.out.connect(liveOut); liveOut.connect(trim); trim.connect(clip); clip.connect(glue); glue.connect(limit); limit.connect(ctx.destination);
+    // Render-ahead buffers enter the same post-mix chain as the direct live graph.
+    const output = connectMasteringChain(ctx, liveGraph.out, ctx.destination, state.master);
+    liveOut = output.gain;
     useGraph(liveGraph);
     loadSamples(); decodeAllUser().then(() => typeof paintSlots === 'function' && paintSlots());
   }
