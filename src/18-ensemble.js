@@ -104,9 +104,19 @@ function arrangeEnsemble(p, song){
     const signature = p.lead.filter(([, st]) => st < 8).map(([, st]) => st);
     if(signature.length >= 2){
       const tail = p.lead.filter(([, st]) => st >= 8);
-      p.lead = p.lead.filter(([, st]) => st < 8).concat(
-        tail.map(([r, st, d], i) => [r, 8 + signature[i % signature.length], d])
-      ).sort((a, b) => a[1] - b[1]);
+      // Do not collapse several notes onto the same step when the tail has
+      // more notes than the motif. Preserve the original note count and order.
+      const occupied = new Set();
+      const repeated = tail.map(([r, st, d], i) => {
+        const preferred = 8 + signature[i % signature.length];
+        const candidates = [preferred, st, ...Array.from({length: 8}, (_, k) => 8 + k)];
+        const chosen = candidates.find(step => step >= 8 && step < 16 && !occupied.has(step));
+        if(chosen === undefined) return null;
+        occupied.add(chosen);
+        return [r, chosen, d];
+      }).filter(Boolean);
+      p.lead = p.lead.filter(([, st]) => st < 8).concat(repeated)
+        .sort((a, b) => a[1] - b[1]);
     }
   }
   // Rule 3: remove semitone rubs, adjusting the least important line first
