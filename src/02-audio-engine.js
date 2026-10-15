@@ -11,7 +11,7 @@ function curve(k){
   return curves[k] = c;
 }
 const pan = v => { if(!ctx.createStereoPanner) return ctx.createGain(); const p = ctx.createStereoPanner(); p.pan.value = v; return p; };
-let liveGraph = null; const irCache = {};
+let liveGraph = null, liveMastering = null; const irCache = {};
 function getIR(){ const k = Q().ir; return irCache[k] || (irCache[k] = makeIR(k)); }
 function makeGraph(c, offline){
   const prev = ctx; ctx = c;
@@ -78,8 +78,25 @@ function connectMasteringChain(c, source, destination, volume = 1){
   glue.threshold.value = -14; glue.ratio.value = 3; glue.attack.value = 0.01; glue.release.value = 0.15;
   const limit = c.createDynamicsCompressor();
   limit.threshold.value = -3; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.08;
-  source.connect(gain); gain.connect(trim); trim.connect(clip); clip.connect(glue); glue.connect(limit); limit.connect(destination);
-  return {gain, trim, clip, glue, limit};
+  // A/B: both paths retain identical volume; only the mastering processors are bypassed.
+  const dry = c.createGain(), wet = c.createGain();
+  dry.gain.value = state.masterBypass ? 1 : 0;
+  wet.gain.value = state.masterBypass ? 0 : 1;
+  source.connect(gain);
+  gain.connect(dry); dry.connect(destination);
+  gain.connect(trim); trim.connect(clip); clip.connect(glue); glue.connect(limit); limit.connect(wet); wet.connect(destination);
+  return {gain, trim, clip, glue, limit, dry, wet};
+}
+function setMasterBypass(bypass){
+  state.masterBypass = !!bypass;
+  if(liveMastering && ctx){
+    const t = ctx.currentTime;
+    for(const [node, value] of [[liveMastering.dry, bypass ? 1 : 0], [liveMastering.wet, bypass ? 0 : 1]]){
+      node.gain.cancelScheduledValues(t);
+      node.gain.setTargetAtTime(value, t, 0.015);
+    }
+  }
+
 }
 function ensureAudio(){
   if(!ctx){
@@ -92,8 +109,8 @@ function ensureAudio(){
     for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
     liveGraph = makeGraph(ctx, false);
     // Render-ahead buffers enter the same post-mix chain as the direct live graph.
-    const output = connectMasteringChain(ctx, liveGraph.out, ctx.destination, state.master);
-    liveOut = output.gain;
+    liveMastering = connectMasteringChain(ctx, liveGraph.out, ctx.destination, state.master);
+    liveOut = liveMastering.gain;
     useGraph(liveGraph);
     loadSamples(); decodeAllUser().then(() => typeof paintSlots === 'function' && paintSlots());
   }
