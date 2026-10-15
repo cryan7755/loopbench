@@ -80,6 +80,23 @@ function arrangeEnsemble(p, song){
     const lo = 72 + (p.arpT || 0) + Math.min(...p.arp.map(a => a[0]));
     if(lo <= top + 3){ if(lo + 12 + 12 <= 100) p.arpT = (p.arpT || 0) + 12; else p.arp = p.arp.filter(([, s]) => s % 2 === 0); }
   }
+  // Deterministic motif contour: repeat a recognizable two-bar interval shape
+  // at phrase returns, while retaining the current bar's rhythm and harmony.
+  // Use the song seed rather than mutable random state for repeatable exports.
+  if(p.lead && p.lead.length >= 3 && Number.isInteger(p.barIn) && p.barIn % 4 >= 2){
+    const seed = String(song.seed || song.title || 'loopbench');
+    let hash = 2166136261;
+    for(let i = 0; i < seed.length; i++) hash = Math.imul(hash ^ seed.charCodeAt(i), 16777619);
+    const contours = [[0, 2, 4, 2], [0, -2, 1, 3], [0, 3, 2, 0], [0, -1, -3, 0]];
+    const motif = contours[(hash >>> 0) % contours.length];
+    const notes = p.lead.slice().sort((a, b) => a[1] - b[1]);
+    const first = notes[0][0];
+    p.lead = notes.map(([r, st, d], i) => {
+      const target = first + motif[i % motif.length];
+      const movement = Math.max(-3, Math.min(3, target - r));
+      return [r + movement, st, d];
+    });
+  }
   // Phrase continuity: preserve the opening rhythmic signature in the second
   // half of each four-bar phrase. Keep pitches and chord-aware adjustments free
   // to change, so this creates recurrence without literal copy/paste melodies.
