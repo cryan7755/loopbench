@@ -79,11 +79,12 @@ function connectMasteringChain(c, source, destination, volume = 1){
   const limit = c.createDynamicsCompressor();
   limit.threshold.value = -3; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.08;
   // A/B: both paths retain identical volume; only the mastering processors are bypassed.
+  const dryCompensation = c.createGain(); dryCompensation.gain.value = 0.65;
   const dry = c.createGain(), wet = c.createGain();
   dry.gain.value = state.masterBypass ? 1 : 0;
   wet.gain.value = state.masterBypass ? 0 : 1;
   source.connect(gain);
-  gain.connect(dry); dry.connect(destination);
+  gain.connect(dryCompensation); dryCompensation.connect(dry); dry.connect(destination);
   gain.connect(trim); trim.connect(clip); clip.connect(glue); glue.connect(limit); limit.connect(wet); wet.connect(destination);
   return {gain, trim, clip, glue, limit, dry, wet};
 }
