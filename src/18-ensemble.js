@@ -80,6 +80,18 @@ function arrangeEnsemble(p, song){
     const lo = 72 + (p.arpT || 0) + Math.min(...p.arp.map(a => a[0]));
     if(lo <= top + 3){ if(lo + 12 + 12 <= 100) p.arpT = (p.arpT || 0) + 12; else p.arp = p.arp.filter(([, s]) => s % 2 === 0); }
   }
+  // Phrase continuity: preserve the opening rhythmic signature in the second
+  // half of each four-bar phrase. Keep pitches and chord-aware adjustments free
+  // to change, so this creates recurrence without literal copy/paste melodies.
+  if(p.lead && p.lead.length && Number.isInteger(p.barIn) && p.barIn % 4 === 2){
+    const signature = p.lead.filter(([, st]) => st < 8).map(([, st]) => st);
+    if(signature.length >= 2){
+      const tail = p.lead.filter(([, st]) => st >= 8);
+      p.lead = p.lead.filter(([, st]) => st < 8).concat(
+        tail.map(([r, st, d], i) => [r, 8 + signature[i % signature.length], d])
+      ).sort((a, b) => a[1] - b[1]);
+    }
+  }
   // Rule 3: remove semitone rubs, adjusting the least important line first
   const chordPcs = (() => { const c = p.wall || p.chords || p.gate; return c ? (c.ext || c.ints).map(x => ((c.T + x) % 12 + 12) % 12) : null; })();
   // Anchor important lead notes to the current harmony while leaving passing
