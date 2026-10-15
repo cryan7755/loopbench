@@ -82,6 +82,22 @@ function arrangeEnsemble(p, song){
   }
   // Rule 3: remove semitone rubs, adjusting the least important line first
   const chordPcs = (() => { const c = p.wall || p.chords || p.gate; return c ? (c.ext || c.ints).map(x => ((c.T + x) % 12 + 12) % 12) : null; })();
+  // Anchor important lead notes to the current harmony while leaving passing
+  // notes and syncopated phrases intact. A nearby chord tone is preferred over
+  // a large melodic leap, preserving the composer's original motif contour.
+  if(chordPcs && p.lead && p.leadSynth){
+    const base = 12*(p.leadSynth.octave + 1) + (p.leadSynth.transpose || 0);
+    const pitchClass = m => ((m % 12) + 12) % 12;
+    p.lead = p.lead.map(([r, s, d]) => {
+      if(s % 4 !== 0) return [r, s, d];
+      const midi = base + r;
+      if(chordPcs.includes(pitchClass(midi))) return [r, s, d];
+      const options = [-2, -1, 1, 2].filter(delta => chordPcs.includes(pitchClass(midi + delta)));
+      if(!options.length) return [r, s, d];
+      const delta = options.sort((a, b) => Math.abs(a) - Math.abs(b))[0];
+      return [r + delta, s, d];
+    });
+  }
   const fixLine = (key, notes, others) => notes.map(n => {
     const [m, s, d] = n;
     const rub = others.some(([om, os, od]) => os < s + d && s < os + od && (ic(m, om) === 1 || ic(m, om) === 11));
