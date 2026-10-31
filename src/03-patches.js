@@ -8,7 +8,7 @@ const PATCHES = {
   pad:     {osc:'sawtooth', voices:7, spread:28, width:1,   cutoff:1600, env:900, fdecay:1.2,    q:0.9, a:0.35,  d:0.8,  s:0.9,  r:1.0,  rev:0.6,  cho:0.45, hp:140, slope:24, gain:0.2, flfo:[0.13,0.35]},
   bass:    {osc:'sawtooth', voices:2, spread:9,  width:0,   cutoff:200,  env:2200, fdecay:0.14, q:5,   a:0.002, d:0.22, s:0.6,  r:0.09, drive:2.4, sub:0.3, subOsc:'sine', slope:24, gain:0.52},
   bigbass: {osc:'sawtooth', voices:6, spread:20, width:0.5, cutoff:380,  env:4500, fdecay:0.13, q:2.5, a:0.002, d:0.2,  s:0.6,  r:0.12, drive:3.2, sub:0.25, subOsc:'sine', slope:24, gain:0.47},
-  reese:   {osc:'sawtooth', voices:3, spread:26, width:0.5, cutoff:750,  env:700,  fdecay:0.4,  q:2,   a:0.004, d:0.3,  s:1,    r:0.1,  drive:3.2, sub:0.3, subOsc:'sine', slope:24, gain:0.44},
+  reese:   {osc:'sawtooth', voices:3, spread:14, width:0.32, cutoff:620, env:520, fdecay:0.32, q:1.1, a:0.006, d:0.25, s:0.78, r:0.11, drive:2.1, sub:0.12, subOsc:'sine', slope:24, gain:0.38},
   wobble:  {osc:'sawtooth', voices:3, spread:14, width:0.3, cutoff:900,  lfo:800,               q:9,   a:0.005, d:0.2,  s:1,    r:0.08, drive:4,            gain:0.42},
   wall:    {osc:'sawtooth', voices:9, spread:38, width:1,   cutoff:1800, env:1200, fdecay:0.6,   q:0.9, a:0.05,  d:0.6,  s:0.85, r:0.8,  rev:0.48, del:0.05, cho:0.4, hp:160, slope:24, gain:0.18, flfo:[0.09,0.3]},
   bell:    {fm:true, ratio:3.5, index:6, idecay:0.35, voices:2, spread:7, width:0.6, cutoff:12000,  q:0.7, a:0.002, d:0.9,  s:0,    r:0.6,  rev:0.45, del:0.3,  gain:0.3},
