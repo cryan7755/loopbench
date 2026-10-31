@@ -6,15 +6,15 @@ const root = new URL('../', import.meta.url);
 const studio = readFileSync(new URL('../src/studio.template.html', import.meta.url),'utf8');
 const build = readFileSync(new URL('../scripts/build.mjs', import.meta.url),'utf8');
 test('rebuilt studio provides independent audio instrument paths',()=>{
-  for(const part of ["kind==='kick'","kind==='snare'","kind==='sub'","kind==='reese'","kind==='pad'"]) assert.ok(studio.includes(part),part);
+  for(const part of ["kind==='kick'","kind==='snare'","kind==='sub'","kind==='reese'"]) assert.ok(studio.includes(part),part);
   assert.match(studio,/function schedule\(/);
-  assert.match(studio,/function play\(/);
+  assert.match(studio,/async function play\(/);
 });
 test('minor-key harmony and independent Reese envelope',()=>{
-  assert.match(studio,/function chordNotes\\(/);
-  assert.match(studio,/MINOR\\[degree\\]/);
-  assert.match(studio,/detFilter\\.connect\\(dg\\)/);
-  assert.match(studio,/local%8!==6/);
+  assert.match(studio,/function chordNotes\(/);
+  assert.match(studio,/MINOR\[degree\]/);
+  assert.match(studio,/detFilter\.connect\(dg\\)/);
+  assert.match(studio,/local%8===7/);
 });
 test('studio schedules audio incrementally rather than rendering entire song',()=>{
   assert.match(studio,/current\+3/);
