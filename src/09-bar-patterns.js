@@ -135,6 +135,21 @@ function cycleBar(song, n, pos){
     x.wall = {T, ints, ext, voiced, bass, len:16, bright: i >= 8 ? 1.3 : 1};
     if(i < 8 && !fillBar) x.vocal = hb.filter((_, k) => k % 2 === 0).map(([r, s], k) => ({s, len:0.9, m: 60 + K + r, vw:[k % 2 ? 'e' : 'a'], chop:true}));
     if(i >= 8) x.vocal = vocalBar(song, hbar, T, ints);
+    // DnB mix-space: the hook is the foreground. Avoid layering a constant
+    // 16th-note arp, extra vocal, counter melody and doubled lead over it.
+    if(song.style === 'dnb'){
+      x.arp = null;
+      x.gate = null;
+      x.counter = null;
+      x.vocal = null;
+      x.lead2 = null;
+      x.wall.bright = 0.72;
+      x.wall.len = 8;
+      x.chords = {steps:[2,10], len:1.5, T, ints, ext, voiced, bass, patch:'stab'};
+      x.leadSynth = {wave:'pluck', bright:0.82, octave:4, transpose:K, len:0.8};
+      // Two-bar call/response: the second bar leaves a hole in the hook.
+      if(i % 2 === 1) x.lead = hb.filter((_,k) => k % 2 === 0);
+    }
     if(!fillBar && (i >= 4)){ x.counter = counterLine(song, ints, hb.map(n => n[1]), i >= 8 ? 4 : 2); x.counterT = T; }
   }
   return Object.assign(buildPattern(d, notes), x);
