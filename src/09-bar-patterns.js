@@ -98,13 +98,25 @@ function cycleBar(song, n, pos){
       clap: (st.clap.length ? st.clap : st.snare).slice(), chat: song.dna ? HATS[song.dna.hats].slice() : [1,3,5,7,9,11,13,15],
       ohat: (st.ohat || [2,6,10,14]).slice(), shaker: eighths.slice()});
     if(i === 0 || i === 8) d.crash = [0];
-    if(chance(0.4)) d.rim = pick([[3,11],[7,15],[3,6,11,14]]);
-    if(chance(0.2)) d.bell = pick([[6,14],[3,10]]);
-    if(i % 4 === 3 && !fillBar && chance(0.5)) d.kick.push(14,15);
+    // DnB: maintain a stable two-step backbeat; use phrase-level, not bar-level,
+    // variation so the groove settles before introducing a new fill.
+    if(song.style === 'dnb'){
+      d.kick = (i % 8 === 7 ? st.kicks[1] : st.kicks[0]).slice();
+      d.snare = [4,12];
+      d.clap = [];
+      d.chat = [0,2,4,6,8,10,12,14];
+      d.shaker = [2,6,10,14];
+      d.ohat = [6,14];
+    }
+    if(song.style !== 'dnb' && chance(0.4)) d.rim = pick([[3,11],[7,15],[3,6,11,14]]);
+    if(song.style !== 'dnb' && chance(0.2)) d.bell = pick([[6,14],[3,10]]);
+    if(song.style !== 'dnb' && i % 4 === 3 && !fillBar && chance(0.5)) d.kick.push(14,15);
     if(fillBar){ d.snare = d.snare.concat(i === 15 ? [8,10,12,13,14,15] : [12,13,14,15]); d.tom = i === 15 ? [11,13,15] : [14,15]; }
     const hb = hookBar(song, hbar), K = keyOff(song);
     // the bass locks to the hook's rhythm, jumping up an octave under its high notes
-    notes = st.dropRhythm ? st.dropRhythm.map((s,k) => [k % 4 === 3 ? 12 : 0, s]) : hb.map(([r, s]) => [r >= 7 && !bo ? 12 : bo, s]);
+    notes = song.style === 'dnb'
+      ? [0,3,7,10,14].filter(s => !fillBar || s < 12).map((s,k) => [k === 3 ? 12 : bo, s])
+      : st.dropRhythm ? st.dropRhythm.map((s,k) => [k % 4 === 3 ? 12 : 0, s]) : hb.map(([r, s]) => [r >= 7 && !bo ? 12 : bo, s]);
     const dropBass = (song.dna && song.dna.dropBass) || st.dropBass, wob = dropBass === 'wobble';
     x.synth = {wave: dropBass, bright: 1 + (i % 8)*0.07, octave:2, transpose:T, len: wob ? 1.9 : 1.2, lfo: wob ? pick([1,2,2,4]) : 0};
     Object.assign(x, {duck:true, impact: i === 0, bigKick:true});
