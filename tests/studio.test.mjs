@@ -16,8 +16,10 @@ test('Reese voice passes through its own filter and envelope',()=>{
 });
 test('eight-bar DnB phrasing and section-aware drum patterns',()=>{
  assert.ok(studio.includes('phrase=local%8'));
- assert.ok(studio.includes('phrase===7'));
- assert.ok(studio.includes('for(const ghost of'));
+ assert.ok(studio.includes('fill=phrase===7'));
+ assert.ok(studio.includes("['development',8]"));
+ assert.ok(studio.includes('[[0,3.2],[10,2.2]]'));
+ assert.ok(studio.includes('if(phrase%2&&!fill)'));
  assert.ok(studio.includes('function schedule('));
 });
 test('async playback schedules incremental bars',()=>{
