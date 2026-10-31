@@ -14,7 +14,7 @@ test('minor-key harmony and independent Reese envelope',()=>{
   assert.match(studio,/function chordNotes\(/);
   assert.match(studio,/MINOR\[degree\]/);
   assert.match(studio,/detFilter\.connect\(dg\\)/);
-  assert.match(studio,/local%8===7/);
+  assert.match(studio,/phrase===7/);
 });
 test('studio schedules audio incrementally rather than rendering entire song',()=>{
   assert.match(studio,/current\+3/);
