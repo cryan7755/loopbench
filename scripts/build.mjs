@@ -5,11 +5,12 @@ import { join } from 'node:path';
 import { ROOT, html } from './bundle.mjs';
 
 function build() {
-  const t0 = Date.now(), legacy = html(), page = readFileSync(join(ROOT, 'src', 'studio.template.html'), 'utf8'), dist = join(ROOT, 'dist');
+  const t0 = Date.now(), legacy = html(), source = readFileSync(join(ROOT, 'src', 'studio.template.html'), 'utf8'), buildId = 'AUDIO-85945d34', page = source.replace('</title>', `</title><meta name="loopbench-build" content="${buildId}">`).replace('STUDIO / 01', `STUDIO / ${buildId}`), dist = join(ROOT, 'dist');
   mkdirSync(dist, { recursive: true });
   writeFileSync(join(dist, 'loopbench.html'), page);
   writeFileSync(join(dist, 'index.html'), page);
   writeFileSync(join(dist, 'legacy.html'), legacy);
+  console.log(`Loopbench build ID: ${buildId}`);
   console.log(`built dist/loopbench.html (${(page.length / 1e6).toFixed(2)} MB) in ${Date.now() - t0} ms`);
 }
 
