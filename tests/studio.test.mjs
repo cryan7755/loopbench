@@ -1,26 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {join} from 'node:path';
-const root = new URL('../', import.meta.url);
-const studio = readFileSync(new URL('../src/studio.template.html', import.meta.url),'utf8');
-const build = readFileSync(new URL('../scripts/build.mjs', import.meta.url),'utf8');
-test('rebuilt studio provides independent audio instrument paths',()=>{
-  for(const part of ["kind==='kick'","kind==='snare'","kind==='sub'","kind==='reese'"]) assert.ok(studio.includes(part),part);
-  assert.match(studio,/function schedule\(/);
-  assert.match(studio,/async function play\(/);
+const studio=readFileSync(new URL('../src/studio.template.html',import.meta.url),'utf8');
+const build=readFileSync(new URL('../scripts/build.mjs',import.meta.url),'utf8');
+test('studio has sample playback and a fallback drum kit',()=>{
+ assert.ok(studio.includes('async function loadRecordedKit()'));
+ assert.ok(studio.includes('recordedKit?.[kind]||drumKit[kind]'));
+ assert.ok(studio.includes('function percussion('));
 });
-test('minor-key harmony and independent Reese envelope',()=>{
-  assert.match(studio,/function chordNotes\(/);
-  assert.match(studio,/MINOR\[degree\]/);
-  assert.match(studio,/detFilter\.connect\(dg\\)/);
-  assert.match(studio,/phrase===7/);
+test('Reese voice passes through its own filter and envelope',()=>{
+ assert.ok(studio.includes('detFilter.connect(dg)'));
 });
-test('studio schedules audio incrementally rather than rendering entire song',()=>{
-  assert.match(studio,/current\+3/);
-  assert.match(studio,/schedule\(plan,startTime,g,scheduled,target\)/);
+test('eight-bar DnB phrasing and section-aware drum patterns',()=>{
+ assert.ok(studio.includes('phrase=local%8'));
+ assert.ok(studio.includes('phrase===7'));
+ assert.ok(studio.includes('function schedule('));
 });
-test('build defaults to studio and retains legacy app',()=>{
-  assert.match(build,/studio\.template\.html/);
-  assert.match(build,/legacy\.html/);
+test('async playback schedules incremental bars',()=>{
+ assert.ok(studio.includes('async function play()'));
+ assert.ok(studio.includes('current+3'));
+ assert.ok(studio.includes('schedule(plan,startTime,g,scheduled,target)'));
+});
+test('studio is default, legacy retained, samples embedded',()=>{
+ for(const item of ['studio.template.html','legacy.html','sampleSource()'])assert.ok(build.includes(item));
 });
