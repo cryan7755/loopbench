@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const studio=readFileSync(new URL('../src/studio.template.html',import.meta.url),'utf8');
 const build=readFileSync(new URL('../scripts/build.mjs',import.meta.url),'utf8');
-test('studio has sample playback and a fallback drum kit',()=>{
+test('studio uses deterministic synthesized drum samples, not unverified legacy recordings',()=>{
  assert.ok(studio.includes('async function loadRecordedKit()'));
- assert.ok(studio.includes('recordedKit?.[kind]||drumKit[kind]'));
+ assert.ok(studio.includes('src.buffer=drumKit[kind]'));
+ assert.ok(!studio.includes('src.buffer=recordedKit?.[kind]'));
+ assert.ok(studio.includes('if(token!==playToken)return'));
+ assert.ok(studio.includes('g.feedback.disconnect()'));
  assert.ok(studio.includes('function percussion('));
 });
 test('Reese voice passes through its own filter and envelope',()=>{
