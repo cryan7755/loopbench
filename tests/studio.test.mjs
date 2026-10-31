@@ -10,6 +10,12 @@ test('rebuilt studio provides independent audio instrument paths',()=>{
   assert.match(studio,/function schedule\(/);
   assert.match(studio,/function play\(/);
 });
+test('minor-key harmony and independent Reese envelope',()=>{
+  assert.match(studio,/function chordNotes\\(/);
+  assert.match(studio,/MINOR\\[degree\\]/);
+  assert.match(studio,/detFilter\\.connect\\(dg\\)/);
+  assert.match(studio,/local%8!==6/);
+});
 test('studio schedules audio incrementally rather than rendering entire song',()=>{
   assert.match(studio,/current\+3/);
   assert.match(studio,/schedule\(plan,startTime,g,scheduled,target\)/);
